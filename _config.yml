@@ -5,4 +5,4 @@ redcarpet:
     - html_toc
 repository: libcpr/docs
 gems: ['jekyll-github-metadata', 'jemoji']
-baseurl: '/docs'
+baseurl: ''
