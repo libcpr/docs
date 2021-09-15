@@ -119,7 +119,7 @@ target_link_libraries(${PROJECT_NAME} CONAN_PKG::cpr)
 Create `conanfile.txt` in your source dir:
 ```
 [requires]
-cpr/1.5.0
+cpr/1.6.1
 
 [generators]
 cmake
