@@ -3,6 +3,6 @@ redcarpet:
   extensions:
     - with_toc_data
     - html_toc
-repository: libcpr/cpr
+repository: libcpr/docs
 gems: ['jekyll-github-metadata', 'jemoji']
 baseurl: '/cpr'
