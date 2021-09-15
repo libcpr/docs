@@ -16,7 +16,7 @@ Here's a quick GET request:
 #include <cpr/cpr.h>
 
 int main(int argc, char** argv) {
-    cpr::Response r = cpr::Get(cpr::Url{"https://api.github.com/repos/whoshuu/cpr/contributors"},
+    cpr::Response r = cpr::Get(cpr::Url{"https://api.github.com/repos/libcpr/cpr/contributors"},
                       cpr::Authentication{"user", "pass"},
                       cpr::Parameters{{"anon", "true"}, {"key", "value"}});
     r.status_code;                  // 200
@@ -58,7 +58,7 @@ C++ Requests currently supports:
 
 Support for the following will be forthcoming (in rough order of implementation priority):
 
-* [Streamed requests](https://github.com/whoshuu/cpr/issues/25)
+* [Streamed requests](https://github.com/libcpr/cpr/issues/25)
 
 and much more!
 
@@ -70,7 +70,7 @@ Add the following to your `CMakeLists.txt`.
 
 ```cmake
 include(FetchContent)
-FetchContent_Declare(cpr GIT_REPOSITORY https://github.com/whoshuu/cpr.git GIT_TAG c8d33915dbd88ad6c92b258869b03aba06587ff9) # the commit hash for 1.5.0
+FetchContent_Declare(cpr GIT_REPOSITORY https://github.com/libcpr/cpr.git GIT_TAG f4622efcb59d84071ae11404ae61bd821c1c344b) # the commit hash for 1.6.2
 FetchContent_MakeAvailable(cpr)
 ```
 
@@ -138,4 +138,4 @@ The `cpr` package in Conan is kept up to date by Conan contributors. If the vers
 
 ## Contributing
 
-Please fork this repository and contribute back using [pull requests](https://github.com/whoshuu/cpr/pulls). Features can be requested using [issues](https://github.com/whoshuu/cpr/issues). All code, comments, and critiques are greatly appreciated.
+Please fork this repository and contribute back using [pull requests](https://github.com/libcpr/cpr/pulls). Features can be requested using [issues](https://github.com/libcpr/cpr/issues). All code, comments, and critiques are greatly appreciated.
