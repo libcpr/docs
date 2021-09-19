@@ -811,3 +811,24 @@ cpr::Response r = cpr::Post(cpr::Url{"http://www.httpbin.org/get"},
                   cpr::Redirect{42L, true, PostRedirectFlags::POST_301 | PostRedirectFlags::POST_302});
 ```
 {% endraw %}
+
+## HTTP Protocol Version
+
+To change the HTTP protocol version, the `cpr::HttpVersion` class exists.
+It takes a `cpr::HttpVersionCode`, which changes the underlying HTTP protocol version used.
+Possible values are:
+
+* `VERSION_NONE`: Let libcurl decide which version is the best.
+* `VERSION_1_0`: Enforce HTTP 1.0 requests.
+* `VERSION_1_1`: Enforce HTTP 1.1 requests.
+* `VERSION_2_0`: Attempt HTTP 2.0 requests. Fallback to HTTP 1.1 if negotiation fails. Requires libcurl > 7.33.0.
+* `VERSION_2_0_TLS`: Attempt HTTP 2.0 for HTTPS requests only. Fallback to HTTP 1.1 if negotiation fails. HTTP 1.1 will be used for HTTP connections. Requires libcurl > 7.47.0.
+* `VERSION_2_0_PRIOR_KNOWLEDGE`: Start HTTP 2.0 for HTTP requests. Requires prior knowledge that the server supports HTTP 2.0. For HTTPS requests we will negotiate the protocol version in the TLS handshake. Requires libcurl > 7.49.0.
+* `VERSION_3_0`: Attempt HTTP 3.0 requests. Requires prior knowledge that the server supports HTTP 3.0 since there is no gracefully downgrade. Fallback to HTTP 1.1 if negotiation fails. Requires libcurl > 7.66.0.
+
+{% raw %}
+```c++
+cpr::Response r = cpr::Get(cpr::Url{"http://google.de"},
+                  cpr::HttpVersion{cpr::HttpVersionCode::VERSION_2_0});
+```
+{% endraw %}
