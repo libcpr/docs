@@ -800,6 +800,7 @@ It houses three attributes
 
 * `maximum`: The maximum number of redirects to follow. Default: `50L`. `0`: Refuse any redirects. `-1`: Infinite number of redirects.
 * `follow`: Follow 3xx redirects. Default: `true`.
+* `cont_send_cred`: Continue to send authentication (user+password) credentials when following locations, even when hostname changed. Default: false
 * `post_flags`: Flags to control how to act after a redirect for a post request. Default: `PostRedirectFlags::POST_ALL`.
 
 In the following example we will follow up to 42 redirects and in case we encounter a 301 or 302 redirect, we will post again.
@@ -808,7 +809,7 @@ In the following example we will follow up to 42 redirects and in case we encoun
 ```c++
 cpr::Response r = cpr::Post(cpr::Url{"http://www.httpbin.org/get"},
                   cpr::Payload{{"key", "value"}},
-                  cpr::Redirect{42L, true, PostRedirectFlags::POST_301 | PostRedirectFlags::POST_302});
+                  cpr::Redirect{42L, true, false, PostRedirectFlags::POST_301 | PostRedirectFlags::POST_302});
 ```
 {% endraw %}
 
