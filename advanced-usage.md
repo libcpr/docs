@@ -3,12 +3,46 @@ layout: default
 title: cpr - Advanced Usage
 ---
 
+## Version Macros
+CPR exposes a couple of preprocessor macros with version information.
+
+{% raw %}
+```c++
+/**
+ * CPR version as a string.
+ **/
+#define CPR_VERSION "1.7.0"
+
+/**
+ * CPR version split up into parts.
+ **/
+#define CPR_VERSION_MAJOR 1
+#define CPR_VERSION_MINOR 7
+#define CPR_VERSION_PATCH 0
+
+/**
+ * CPR version as a single hex digit.
+ * it can be split up into three parts:
+ * 0xAABBCC
+ * AA: The current CPR major version number in a hex format.
+ * BB: The current CPR minor version number in a hex format.
+ * CC: The current CPR patch version number in a hex format.
+ *
+ * Examples:
+ * '0x010702' -> 01.07.02 -> CPR_VERSION: 1.7.2
+ * '0xA13722' -> A1.37.22 -> CPR_VERSION: 161.55.34
+ **/
+#define CPR_VERSION_NUM 0x010702
+```
+{% endraw %}
+
 ## Response Objects
 
 `Response` objects are bags of data. Their sole purpose is to give the client information at the end of a request -- there's nothing in the API that uses a `Response` after it gets back to you. This reasoning drove the decision to make the member fields of the response public and mutable.
 
 A `Response` has these fields and methods:
 
+{% raw %}
 ```c++
 long status_code;               // The HTTP status code for the request
 std::string text;               // The body of the HTTP response
@@ -26,9 +60,11 @@ long redirect_count;            // How many redirects occurred
 
 std::vector<std::string> GetCertInfo(); // Returns a vector of certificate information strings (HTTPS only)
 ```
+{% endraw %}
 
 and they're dead simple to access:
 
+{% raw %}
 ```c++
 cpr::Response r = cpr::Get(cpr::Url{"http://www.httpbin.org/get"});
 if(r.status_code == 0)
@@ -40,6 +76,7 @@ else if (r.status_code >= 400) {
     std::cout << "Body:" << std::endl << r.text;
 }
 ```
+{% endraw %}
 
 The `Header` is essentially a map with an important modification. Its keys are case insensitive as required by [RFC 7230](http://tools.ietf.org/html/rfc7230#section-3.2):
 
