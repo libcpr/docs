@@ -606,7 +606,7 @@ struct File
 };
 bool write_data(std::string data, intptr_t userdata)
 {
-    File* pf = (File *)userdata;
+    File* pf = reinterpret_cast<File*>(userdata);
     memcpy(pf->file_buf + pf->read_len, data.data(), data.size());
     pf->read_len += data.size();
     return true; // Return `true` on success, or `false` to **cancel** the transfer.
@@ -617,7 +617,7 @@ void download_to_mem(File &f)
     session.SetUrl(cpr::Url{"http://www.httpbin.org/1.jpg"});
     f.read_len = session.GetDownloadFileLength();
     f.file_buf = malloc(f.read_len);
-    cpr::Result r = session.Download(cpr::WriteCallback{write_data, &f});
+    cpr::Result r = session.Download(cpr::WriteCallback{write_data, reinterpret_cast<File*>(&f)});
 }
 int main()
 {
