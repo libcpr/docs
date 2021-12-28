@@ -64,13 +64,16 @@ and much more!
 
 ## Usage
 
-If you already have a project you need to integrate C++ Requests with, the primary way is to use CMake `fetch_content`.
+### CMake
+
+If you already have a CMake project you need to integrate C++ Requests with, the primary way is to use `fetch_content`.
 Add the following to your `CMakeLists.txt`.
 
 
 ```cmake
 include(FetchContent)
-FetchContent_Declare(cpr GIT_REPOSITORY https://github.com/libcpr/cpr.git GIT_TAG f4622efcb59d84071ae11404ae61bd821c1c344b) # the commit hash for 1.6.2
+FetchContent_Declare(cpr GIT_REPOSITORY https://github.com/libcpr/cpr.git
+                         GIT_TAG beb9e98806bb84bcc130a2cebfbcbbc6ce62b335) # The commit hash for 1.7.2. Replace with the latest from: https://github.com/libcpr/cpr/releases
 FetchContent_MakeAvailable(cpr)
 ```
 
@@ -81,7 +84,18 @@ target_link_libraries(your_target_name PRIVATE cpr::cpr)
 ```
 
 That should do it!
-There's no need to handle `libcurl` yourself. All dependencies are taken care of for you.
+There's no need to handle `libcurl` yourself. All dependencies are taken care of for you.  
+All of this can be found in an example [**here**](https://github.com/libcpr/example-cmake-fetch-content).
+
+### Packages for Linux Distributions
+
+Alternatively, you may install a package specific to your Linux distribution. Since so few distributions currently have a package for cpr, most users will not be able to run your program with this approach.
+
+Currently, we are aware of packages for the following distributions:
+
+* [Arch Linux (AUR)](https://aur.archlinux.org/packages/cpr)
+
+If there's no package for your distribution, try making one! If you do, and it is added to your distribution's repositories, please submit a pull request to add it to the list above. However, please only do this if you plan to actively maintain the package.
 
 ## Requirements
 
@@ -104,36 +118,9 @@ The `cpr` port in vcpkg is kept up to date by Microsoft team members and communi
 
 ## Building cpr - Using Conan
 
-You can download and install `cpr` using the [Conan](https://conan.io/) package manager. Setup your CMakeLists.txt (see [Conan documentation](https://docs.conan.io/en/latest/integrations/build_system.html) on how to use MSBuild, Meson and others) like this:
+You can download and install `cpr` using the [Conan](https://conan.io/) package manager. Setup your CMakeLists.txt (see [Conan documentation](https://docs.conan.io/en/latest/integrations/build_system.html) on how to use MSBuild, Meson and others).
+An example can be found [**here**](https://github.com/libcpr/example-cmake-conan).
 
-```CMake
-project(myproject CXX)
-
-add_executable(${PROJECT_NAME} main.cpp)
-
-include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake) # Include Conan-generated file
-conan_basic_setup(TARGETS) # Introduce Conan-generated targets
-
-target_link_libraries(${PROJECT_NAME} CONAN_PKG::cpr)
-```
-Create `conanfile.txt` in your source dir:
-```
-[requires]
-cpr/1.6.1
-
-[generators]
-cmake
-```
-Install and run Conan, then build your project as always:
-
-```Bash
-pip install conan
-mkdir build
-cd build
-conan install ../ --build=missing
-cmake ../
-cmake --build .
-```
 The `cpr` package in Conan is kept up to date by Conan contributors. If the version is out of date, please [create an issue or pull request](https://github.com/conan-io/conan-center-index) on the `conan-center-index` repository.
 
 ## Contributing
