@@ -197,19 +197,17 @@ cpr::Response response = session.Complete(curl_result);
 ```
 {% endraw %}
 
-### Large Responses
+## Large Responses
 
 In case you expect a large string as a response, you should reserve space for it beforehand to prevent it from being moved and resized too often.
-For example, we expect the server to return roughly 4 million characters in his response with a chunk size of 256 characters. Without reserving space for 4 million characters beforehand, the string have to be moved roughly five times in case it grows exponentially.
+For example, we expect the server to return roughly 4 million characters in this response with a chunk size of 256 characters. Without reserving space for 4 million characters beforehand, the string have to be moved roughly five times in case it grows exponentially.
 In reality, this usually happens less, since we usually receive larger chunks from the server.
 
-So to get around this one coud do the following:
+So to get around this one could do the following:
 {% raw %}
 ```c++
-cpr::Session session;
-session.SetUrl(cpr::Url{"http://xxx/file"});
-session.ResponseStringReserve(1024 * 1024 * 4); // Reserve space for at least 4 million characters
-cpr::Response r = session.Get();
+cpr::Response r = cpr::Get(cpr::Url{"http://xxx/file"},
+                  cpr::ReserveSize{1024 * 1024 * 4});   // Reserve space for at least 4 million characters
 ```
 {% endraw %}
 
