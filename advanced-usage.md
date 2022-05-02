@@ -788,14 +788,14 @@ openssl dgst -sha256 -binary www.httpbin.org.pubkey.der | openssl base64
 Some HTTPS services require client certificates to be given at the time of connection for authentication and authorization.
 
 You can specify filenames for client certificates and private keys using the `CertFile` and `KeyFile` options.
-You can also pass a private key using the `KeyBlob` option.
+When using `libcurl` 7.71.0 or newer, you can also pass a private key using the `KeyBlob` option.
 
 Private key as a key path:
 ```c++
 cpr::SslOptions sslOpts = cpr::Ssl(ssl::CertFile{"cert.pem"}, ssl::KeyFile{"key.pem"});
 cpr::Response r = cpr::Get(cpr::Url{"https://www.httpbin.org/get"}, sslOpts);
 ```
-Private key as a blob:
+Private key as a blob (`libcurl` 7.71.0 or newer):
 ```c++
 cpr::SslOptions sslOpts = cpr::Ssl(ssl::CertFile{"cert.pem"}, ssl::KeyBlob{"-----BEGIN RSA PRIVATE KEY-----[...]"});
 cpr::Response r = cpr::Get(cpr::Url{"https://www.httpbin.org/get"}, sslOpts);
