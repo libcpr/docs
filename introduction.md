@@ -228,7 +228,7 @@ Any self-respecting networking library should have support for authentication. I
 
 ```c++
 cpr::Response r = cpr::Get(cpr::Url{"http://www.httpbin.org/basic-auth/user/pass"},
-                  cpr::Authentication{"user", "pass"});
+                  cpr::Authentication{"user", "pass", cpr::AuthMode::BASIC});
 std::cout << r.text << std::endl;
 
 /*
@@ -239,11 +239,11 @@ std::cout << r.text << std::endl;
  */
 ```
 
-This uses [Basic Authentication](https://en.wikipedia.org/wiki/Basic_access_authentication). To use [Digest Authentication](https://en.wikipedia.org/wiki/Digest_access_authentication), just use the `Digest` authentication object:
+This uses [Basic Authentication](https://en.wikipedia.org/wiki/Basic_access_authentication). To use [Digest Authentication](https://en.wikipedia.org/wiki/Digest_access_authentication), just use the `DIGEST` authentication mode:
 
 ```c++
 cpr::Response r = cpr::Get(cpr::Url{"http://www.httpbin.org/digest-auth/auth/user/pass"},
-                  cpr::Digest{"user", "pass"});
+                  cpr::Authentication{"user", "pass", cpr::AuthMode::DIGEST});
 std::cout << r.text << std::endl;
 
 /*
@@ -254,7 +254,7 @@ std::cout << r.text << std::endl;
  */
 ```
 
-and like a good friend, cpr handles the negotiation for you.  `cpr::NTLM{"user", "pass"}` is also available for [NTLM authentication](https://en.wikipedia.org/wiki/NTLMSSP).
+and like a good friend, cpr handles the negotiation for you.  `cpr::Authentication{"user", "pass", cpr::AuthMode::NTLM}` is also available for [NTLM authentication](https://en.wikipedia.org/wiki/NTLMSSP).
 
 Authentication via an [OAuth - Bearer Token](https://en.wikipedia.org/wiki/OAuth) can be done using the `Bearer` authentication object:
 
