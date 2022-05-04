@@ -117,6 +117,34 @@ std::cout << r.text << std::endl;
 ```
 {% endraw %}
 
+Furthermore, it is even possible to set several header parameters from different sources. For example, this is helpful when injecting header parameters into the request from different helpers:
+
+{% raw %}
+```c++
+template<class ...Ts>
+cpr::Response myGet(Ts&& ...ts) {
+    return cpr::Get(std::forward<Ts>(ts)...,
+           cpr::Header{{"Authorization", "token"}});
+}
+
+...
+
+cpr::Response r = cpr::myGet(cpr::Url{"http://www.httpbin.org/headers"},
+                  cpr::Header{{"accept", "application/json"}});
+std::cout << r.text << std::endl;
+
+/*
+ * "headers": {
+ *   "Accept": "application/json",
+ *   "Accept-Encoding": "deflate, gzip", 
+ *   "Authorization": "token",
+ *   "Host": "www.httpbin.org",
+ *   "User-Agent": "curl/7.81.0"
+ * }
+ */
+```
+{% endraw %}
+
 You've probably noticed a similarity between `Header`, `Parameters`, `Payload`, and `Multipart`. They all have constructors of the form:
 
 {% raw %}
