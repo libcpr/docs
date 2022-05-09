@@ -183,6 +183,21 @@ std::cout << new_r.url << std::endl;    // Prints http://www.httpbin.org/get?key
 ```
 {% endraw %}
 
+`Session` also allows you to get the full request URL before a request is actually made:
+
+{% raw %}
+```c++
+cpr::Url url = cpr::Url{"http://www.httpbin.org/get"};
+cpr::Parameters parameters = cpr::Parameters{{"hello", "world"}};
+cpr::Session session;
+session.SetUrl(url);
+session.SetParameters(parameters);
+
+std::string fullRequestUrl = session.GetFullRequestUrl();
+std::cout << fullRequestUrl << std::endl;   // Prints http://www.httpbin.org/get?hello=world
+```
+{% endraw %}
+
 `Session` actually exposes two different interfaces for setting the same option. If you wanted you can do this instead of the above:
 
 {% raw %}
