@@ -958,7 +958,7 @@ std::cout << r.text << std::endl;
 ```
 {% endraw %}
 
-To leave parts of the range empty, a -1 can be specified as the boundary index when creating the partial range:
+To leave parts of the range empty,  `-1` can be specified as the boundary index when creating the partial range:
 
 {% raw %}
 ```c++
