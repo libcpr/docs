@@ -945,7 +945,7 @@ To make a simple HTTP range request, the range options need to be set as follows
 {% raw %}
 ```c++
 cpr::Response r = cpr::Get(cpr::Url{"http://www.httpbin.org/headers"},
-                            cpr::Range{1, 5});
+                           cpr::Range{1, 5});
 std::cout << r.text << std::endl;
 /*
  * {
