@@ -976,7 +976,7 @@ std::cout << r.text << std::endl;
 ```
 {% endraw %}
 
-Moreover, multiple ranges can be specified in a single request with cpr::MultiRange:
+Moreover, multiple ranges can be specified in a single request with `cpr::MultiRange`:
 
 {% raw %}
 ```c++
