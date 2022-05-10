@@ -938,7 +938,7 @@ cpr::Response r = cpr::Get(cpr::Url{"http://google.de"},
 
 ## Range Requests
 
-HTTP range requests can be used to receive only a part of an HTTP message. This allows specific access to required areas of large files or to pause downloads and resume them later.
+HTTP range requests can be used to receive only a part of a HTTP message. This allows specific access to required areas of large files or to pause downloads and resume them later.
 
 To make a simple HTTP range request, the range options need to be set as follows:
 
