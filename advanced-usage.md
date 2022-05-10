@@ -963,7 +963,7 @@ To leave parts of the range empty, a -1 can be specified as the boundary index w
 {% raw %}
 ```c++
 cpr::Response r = cpr::Get(cpr::Url{"http://www.httpbin.org/headers"},
-                            cpr::Range{-1, 5});
+                           cpr::Range{-1, 5});
 std::cout << r.text << std::endl;
 /*
  * {
