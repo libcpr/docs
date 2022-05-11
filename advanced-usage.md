@@ -935,3 +935,72 @@ cpr::Response r = cpr::Get(cpr::Url{"http://google.de"},
                   cpr::HttpVersion{cpr::HttpVersionCode::VERSION_2_0});
 ```
 {% endraw %}
+
+## Range Requests
+
+HTTP range requests can be used to receive only a part of a HTTP message. This allows specific access to required areas of large files or to pause downloads and resume them later.
+
+To make a simple HTTP range request, the range options need to be set as follows:
+
+{% raw %}
+```c++
+cpr::Response r = cpr::Get(cpr::Url{"http://www.httpbin.org/headers"},
+                           cpr::Range{1, 5});
+std::cout << r.text << std::endl;
+/*
+ * {
+ *   "headers": {
+ *     "Range": "bytes=1-5", 
+ *     ...
+ *   }
+ * }
+ */
+```
+{% endraw %}
+
+To leave parts of the range empty,  `-1` can be specified as the boundary index when creating the partial range:
+
+{% raw %}
+```c++
+cpr::Response r = cpr::Get(cpr::Url{"http://www.httpbin.org/headers"},
+                           cpr::Range{-1, 5});
+std::cout << r.text << std::endl;
+/*
+ * {
+ *   "headers": {
+ *     "Range": "bytes=-5", 
+ *     ...
+ *   }
+ * }
+ */
+```
+{% endraw %}
+
+Moreover, multiple ranges can be specified in a single request with `cpr::MultiRange`:
+
+{% raw %}
+```c++
+cpr::Response r = cpr::Get(cpr::Url{"http://www.httpbin.org/headers"}, 
+                           cpr::MultiRange{cpr::Range{1, 3}, cpr::Range{5, 6}});
+std::cout << r.text << std::endl;
+/*
+ * {
+ *   "headers": {
+ *     "Range": "bytes=1-3, 5-6", 
+ *     ...
+ *   }
+ * }
+ */
+```
+{% endraw %}
+
+As always, there is of course also the possibility to set the range of a session object manually:
+
+{% raw %}
+```c++
+cpr::Session session;
+session.SetOption(cpr::Range{1, 3});                    // Alternative: SetRange()
+session.SetOption(cpr::MultiRange{cpr::Range{1, 3}, 
+                                  cpr::Range{5, 6}});   // Alternative: SetMultiRange()
+```
+{% endraw %}
