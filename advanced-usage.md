@@ -895,6 +895,23 @@ cpr::Response r = cpr::Get(cpr::Url{"http://www.httpbin.org/get"},
 ```
 {% endraw %}
 
+## Local Port and Range
+
+Sometimes it is necessary to specify the local port number for the socket used by [libcurl](http://curl.haxx.se/libcurl/).
+By default the TCP stack decides which local port to use.
+You can change this behaviour by passing the `cpr::LocalPort` option to your request or by calling `Session::SetLocalPort`.
+When specifying a local port it is also recommended to specify a range if possible as the configured port might already be used.
+This can be achieved by passing the `cpr::LocalPortRange` option to the request or by calling `Session::SetLocalPortRange`
+Further details: https://curl.se/libcurl/c/CURLOPT_LOCALPORT.html, https://curl.se/libcurl/c/CURLOPT_LOCALPORTRANGE.html
+
+{% raw %}
+```c++
+cpr::Response r = cpr::Get(cpr::Url{"http://www.httpbin.org/get"},
+                  cpr::LocalPort{50000},        // local port number 50000 will be used as source port
+                  cpr::LocalPortRange{100});    // if port 50000 is already in use the first free port up to 50099 will be used
+```
+{% endraw %}
+
 ## Redirects
 
 For configuring the behavior once a redirect occurs, the `cpr::Redirect` class exists.
