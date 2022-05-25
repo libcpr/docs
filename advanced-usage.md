@@ -1021,3 +1021,77 @@ session.SetOption(cpr::MultiRange{cpr::Range{1, 3},
                                   cpr::Range{5, 6}});   // Alternative: SetMultiRange()
 ```
 {% endraw %}
+
+## Interceptors
+
+Cpr offers the possibility to pass user-implemented interceptors to a session, which can then monitor, modify and repeat requests.
+
+Each interceptor implementation must inherit from the abstract class `cpr::Interceptor` and implement the function `cpr::Response intercept(cpr::Session& session)`. This function is automatically called for every added interceptor during the request with the session object belonging to the request passed as a parameter. An essential point of the intercept function is that it must call the `cpr::Response proceed(Session& session)` function implemented in `cpr::Interceptor`. This is neccessary to continue the request and get the `cpr::Response` object.
+
+Here is an example implementation for an interceptor that logs the request without changing it:
+
+{% raw %}
+```c++
+class LoggingInterceptor : public cpr::Interceptor {
+  public:
+    cpr::Response intercept(cpr::Session& session) override {
+        // Log the request URL
+        std::cout << "Request url: " << session.GetFullRequestUrl() << std::endl;
+
+        // Proceed the request and save the response
+        cpr::Response response = proceed(session);
+
+        // Log response status code
+        std::cout << "Response status code: " << response.status_code << std::endl;
+
+        // Return the stored response
+        return response;
+    }
+};
+```
+{% endraw %}
+
+To add one or more concrete interceptor implementations to a session, they can be passed to `Session::AddInterceptor(const std::shared_ptr<Interceptor>& pinterceptor)`:
+
+{% raw %}
+```c++
+// Setup the session
+cpr::Url url{"https://www.httpbin.org/get"};
+cpr::Session session;
+session.SetUrl(url);
+
+// Add an interceptor to the session
+session.AddInterceptor(std::make_shared<LoggingInterceptor>());
+```
+{% endraw %}
+
+If interceptors have been added to the session, the intercept functions of each added interceptor is automatically called during the next request. The interceptors are thereby selected according to the first-in-first-out principle.
+
+{% raw %}
+```c++
+// Make a get request to the session we have previously added our LoggingInterceptor to
+Response response = session.Get();
+
+/*
+* Output produced by the LoggingInterceptor:
+*   Request url: https://www.httpbin.org/get
+*   Response status code: 200
+*/
+```
+{% endraw %}
+
+It should be noted that interceptors can make changes to the session object that is later passed to the proceed function and can thus fundamentally change the request. Of course, the returned response object can also be modified. 
+
+In addition, interceptors can even change the http method of the request by passing the proceed method another parameter of the enum type `cpr::Interceptor::ProceedHttpMethod`. The parameter required for download requests is also simply passed to the proceed method. For example we can implement an interceptor which changes the request method to `HEAD`:
+
+{% raw %}
+```c++
+class ChangeRequestMethodToHeadInterceptor : public Interceptor {
+  public:
+    Response intercept(Session& session) override {
+        // Change the request http method to HEAD
+        return proceed(session, Interceptor::ProceedHttpMethod::HEAD_REQUEST);
+    }
+};
+```
+{% endraw %}
