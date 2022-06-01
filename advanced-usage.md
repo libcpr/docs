@@ -852,6 +852,12 @@ By default, `libcurl` uses the operating system's root certificate chain to auth
 
 If you need to verify a self-signed certificate, you can use the `CaInfo` to specify the CA certificate bundle file, or `CaPath` to specify the directory where multiple CA certificate files are located. If `libcurl` is built against OpenSSL, the certificate directory must be prepared using the openssl `c_rehash` utility.
 
+Another option to check self-signed certificates is to load CA certificates directly from a `std::string` buffer that is stored in `CaBuffer`. However, this requires `libcurl` 7.11.0 or newer and is currently only available for OpenSSL.
+```c++
+cpr::SslOptions sslOpts = cpr::Ssl(ssl::CaBuffer{"-----BEGIN CERTIFICATE-----[...]"});
+cpr::Response r = cpr::Get(cpr::Url{"https://www.httpbin.org/get"}, sslOpts);
+```
+
 ### Retrieving Certificate Information
 
 After a successful request it is possible to retrieve certificate information. The return value is of type `std::vector<std::string>`. It contains one entry per certificate. An example can be found bellow:
