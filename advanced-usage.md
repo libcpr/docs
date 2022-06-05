@@ -240,6 +240,40 @@ cpr::Response response = session.Complete(curl_result);
 ```
 {% endraw %}
 
+## HTTP Compression
+
+HTTP compression is a capability that can improve transfer speed and bandwidth utilization between web servers and web clients. 
+When you issue a HTTP request, you could specify the supported compression schemes in the header: Accept-Encoding. 
+With this setting, you could avoid unexpected compression schemes or use the desired schemes:
+
+{% raw %}
+```c++
+cpr::Response r = cpr::Get(cpr::Url{"http://www.httpbin.org/get"},
+                  cpr::AcceptEncoding{{cpr::AcceptEncodingMethods::deflate, cpr::AcceptEncodingMethods::gzip, cpr::AcceptEncodingMethods::zlib}}); 
+// or you could specify specific schemes with the customized string
+cpr::Response r = cpr::Get(cpr::Url{"http://www.httpbin.org/get"},
+                  cpr::AcceptEncoding{{"deflate", "gzip", "zlib"}}); 
+```
+{% endraw %}
+
+Also, you could use `cpr::Session` to make the connection stateful: 
+
+{% raw %}
+```c++
+cpr::Url url{server->GetBaseUrl() + "/check_accept_encoding.html"};
+cpr::Session session;
+session.SetUrl(url);
+
+session.SetAcceptEncoding({{cpr::AcceptEncodingMethods::deflate, cpr::AcceptEncodingMethods::gzip, cpr::AcceptEncodingMethods::zlib}});
+// or you could specify specific schemes with the customized string
+session.SetAcceptEncoding({{"deflate", "gzip", "zlib"}});
+
+Response response = session.Get();
+```
+{% endraw %}
+
+For more information, please refer to [HTTP compression - Wikipedia](https://en.wikipedia.org/wiki/HTTP_compression) and [CURLOPT_ACCEPT_ENCODING](https://curl.se/libcurl/c/CURLOPT_ACCEPT_ENCODING.html).
+
 ## Large Responses
 
 In case you expect a large string as a response, you should reserve space for it beforehand to prevent it from being moved and resized too often.
