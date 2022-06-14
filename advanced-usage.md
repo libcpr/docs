@@ -325,6 +325,20 @@ for (std::future<cpr::Response>& fr: container) {
 ```
 {% endraw %}
 
+Asynchronous requests can also be performed using a `cpr::Session` object. It is important to note that the asynchronous request is performed directly on the session object, modifying it in the process.
+To ensure that the lifetime of the session is properly extended, the session object used must be managed by a `std::shared_ptr`. Here is an example for an asynchronous get request which uses a session object:
+
+{% raw %}
+```c++
+std::shared_ptr<cpr::Session> session = std::make_shared<cpr::Session>();
+cpr::Url url = cpr::Url{"http://www.httpbin.org/get"};
+session->SetUrl(url);
+cpr::AsyncResponse fr = session->GetAsync();
+cpr::Response r = fr.get();
+std::cout << r.text << std::endl;
+```
+{% endraw %}
+
 An important note to make here is that arguments passed to an asynchronous call are copied. Under the hood, an asychronous call through the library's API is done with `std::async`. By default, for memory safety, all arguments are copied (or moved if temporary) because there's no syntax level guarantee that the arguments will live beyond the scope of the request.
 
 It's possible to force `std::async` out of this default so that the arguments are passed by reference as opposed to value. Currently, however, `cpr::<method>Async` has no support for forced pass by reference, though this is planned for a future release.
@@ -351,6 +365,22 @@ There are a couple of key features to point out here:
 2. The lambda capture is empty, but absolutely doesn't need to be. Anything that can be captured inside a lambda normally can be captured in a lambda passed into the callback interface. This additional vector of flexibility makes it highly preferable to use lambdas, though any functor with a `Response` parameter will compile and work.
 
 Additionally, you can enforce immutability of the `Response` simply with a `const Response&` parameter instead of `Response`.
+
+As with asynchronous requests, asynchronous callbacks can also be used on a shared pointer of a `cpr::Session` object. The usage is similar to the use without a session object:
+{% raw %}
+```c++
+std::shared_ptr<cpr::Session> session = std::make_shared<cpr::Session>();
+cpr::Url url = cpr::Url{"http://www.httpbin.org/get"};
+session->SetUrl(url);
+auto future_text = session->GetCallback([](Response r) {
+        return r.text;
+    });
+// Sometime later
+if (future_text.wait_for(std::chrono::seconds(0)) == std::future_status::ready) {
+    std::cout << future_text.get() << std::endl;
+}
+```
+{% endraw %}
 
 ## Setting a Timeout
 
