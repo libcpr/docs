@@ -367,7 +367,7 @@ There are a couple of key features to point out here:
 
 Additionally, you can enforce immutability of the `Response` simply with a `const Response&` parameter instead of `Response`.
 
-As with asynchronous requests, asynchronous callbacks can also be used on a shared pointer of a `cpr::Session` object. This must be a `std::shared_ptr`, since the implementation uses `std::shared_from_this` which would otherwise throw a `std::bad_weak_ptr` exception. The usage is similar to the use without a session object:
+As with asynchronous requests, asynchronous callbacks can also be used on a shared pointer of a `cpr::Session` object. This **must be** a `std::shared_ptr`, since the implementation uses `std::shared_from_this` which would otherwise throw a `std::bad_weak_ptr` exception. The usage is similar to the use without a session object:
 {% raw %}
 ```c++
 std::shared_ptr<cpr::Session> session = std::make_shared<cpr::Session>();
