@@ -326,7 +326,7 @@ for (std::future<cpr::Response>& fr: container) {
 {% endraw %}
 
 Asynchronous requests can also be performed using a `cpr::Session` object. It is important to note that the asynchronous request is performed directly on the session object, modifying it in the process.
-To ensure that the lifetime of the session is properly extended, the session object used must be managed by a `std::shared_ptr`. This restriction is necessary because the implementation uses `std::shared_from_this` to pass a pointer to the ansynchronous lambda function which would otherwise throw a `std::bad_weak_ptr` exception.
+To ensure that the lifetime of the session is properly extended, the session object used **must be** managed by a `std::shared_ptr`. This restriction is necessary because the implementation uses `std::shared_from_this` to pass a pointer to the ansynchronous lambda function which would otherwise throw a `std::bad_weak_ptr` exception.
 Here is an example for an asynchronous get request which uses a session object:
 
 {% raw %}
