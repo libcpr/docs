@@ -993,6 +993,8 @@ cpr::Response r = cpr::Get(cpr::Url{"http://www.httpbin.org/get"},
 ```
 {% endraw %}
 
+A `cpr::Interface` object can also be created via `std::string_view` instead of `std::string`.
+
 ## Local Port and Range
 
 Sometimes it is necessary to specify the local port number for the socket used by [libcurl](http://curl.haxx.se/libcurl/).
