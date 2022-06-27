@@ -406,6 +406,18 @@ cpr::Response r = cpr::Get(cpr::Url{"http://www.httpbin.org/get"},
 assert(r.elapsed <= 1); // Less than one second should have elapsed
 ```
 
+For the sake of simplicity, the duration can also be specified via `std::chrono_literal`:
+```c++
+#include <assert.h>
+#include <chrono>
+
+using namespace std::chrono_literals;
+
+cpr::Response r = cpr::Get(cpr::Url{"http://www.httpbin.org/get"},
+                  cpr::Timeout{1s}); // Let's hope we aren't using Time Warner Cable
+assert(r.elapsed <= 1); // Less than one second should have elapsed
+```
+
 Setting the `Timeout` option sets the maximum allowed time the transfer operation can take. Since C++ Requests is built on top of libcurl, it's important to know what setting this `Timeout` does to the request. You can find more information about the specific libcurl option [here](http://curl.haxx.se/libcurl/c/CURLOPT_TIMEOUT_MS.html).
 
 ## Setting Callbacks
