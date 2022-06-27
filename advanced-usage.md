@@ -1087,12 +1087,12 @@ std::cout << r.text << std::endl;
 ```
 {% endraw %}
 
-To leave parts of the range empty,  `-1` can be specified as the boundary index when creating the partial range:
+To leave parts of the range empty,  `std::nullopt` can be specified as the boundary index when creating the partial range:
 
 {% raw %}
 ```c++
 cpr::Response r = cpr::Get(cpr::Url{"http://www.httpbin.org/headers"},
-                           cpr::Range{-1, 5});
+                           cpr::Range{std::nullopt, 5});
 std::cout << r.text << std::endl;
 /*
  * {
