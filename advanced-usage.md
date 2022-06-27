@@ -915,7 +915,7 @@ openssl dgst -sha256 -binary www.httpbin.org.pubkey.der | openssl base64
 
 Some HTTPS services require client certificates to be given at the time of connection for authentication and authorization.
 
-You can specify filenames for client certificates and private keys using the `CertFile` and `KeyFile` options.
+You can specify filepaths using `std::string` or `filesystem::path` for client certificates and private keys using the `CertFile` and `KeyFile` options.
 When using `libcurl` 7.71.0 or newer, you can also pass a private key using the `KeyBlob` option.
 
 Private key as a key path:
