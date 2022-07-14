@@ -58,7 +58,7 @@ cpr_off_t uploaded_bytes;       // How many bytes have been send to the server
 cpr_off_t downloaded_bytes;     // How many bytes have been received from the server
 long redirect_count;            // How many redirects occurred
 
-std::vector<std::string> GetCertInfo(); // Returns a vector of certificate information strings (HTTPS only)
+std::vector<CertInfo> GetCertInfos(); // Returns a vector of certificate information objects (HTTPS only)
 ```
 {% endraw %}
 
@@ -925,22 +925,29 @@ cpr::Response r = cpr::Get(cpr::Url{"https://www.httpbin.org/get"}, sslOpts);
 
 ### Retrieving Certificate Information
 
-After a successful request it is possible to retrieve certificate information. The return value is of type `std::vector<std::string>`. It contains one entry per certificate. An example can be found bellow:
+After a successful request, it is possible to retrieve multiple certificates. The return value is of type `std::vector<CertInfo>`. There are multiple entries per certificate. An example can be found bellow:
 
 ```c++
 Url url = "https://github.com";
 Response response = cpr::Get(url);
-std::vector<std::string> certInfo = response.GetCertInfo();
-for (const std::string& s : certInfo)
-{
-    std::cout << "Info: " << s << '\n';
+std::vector<CertInfo> certInfos = response.GetCertInfos();
+for (const CertInfo& certInfo : certInfos) {
+    for (const std::string& entry : certInfo) {
+        std::cout << entry << std::endl;
+    }
 }
 ```
 
 The output could look like:
 ```
 [...]
-Info: Subject:C = XX, L = Default City, O = Default Company Ltd
+Subject:C = US, ST = California, L = San Francisco, O = "GitHub, Inc.", CN = github.com
+Issuer:C = US, O = DigiCert Inc, CN = DigiCert TLS Hybrid ECC SHA384 2020 CA1
+Version:2
+Serial Number:05189a54ebe8c7e903e0ab0d925545de
+Signature Algorithm:ecdsa-with-SHA384
+Public Key Algorithm:id-ecPublicKey
+X509v3 Authority Key Identifier:keyid:0A:BC:08:29:17:8C:A5:39:6D:7A:0E:CE:33:C7:2E:B3:ED:FB:C3:7A
 [...]
 ```
 
