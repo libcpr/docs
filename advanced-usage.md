@@ -49,7 +49,7 @@ std::string text;               // The body of the HTTP response
 Header header;                  // A map-like collection of the header fields
 Url url;                        // The effective URL of the ultimate request
 double elapsed;                 // The total time of the request in seconds
-Cookies cookies;                // A map-like collection of cookies returned in the request
+Cookies cookies;                // A vector-like collection of cookies returned in the request
 Error error;                    // An error object containing the error code and a message
 std::string raw_header;         // The raw header string
 std::string status_line;        // The status line of the respone
@@ -87,12 +87,23 @@ std::cout << r.header["Content-Type"] << std::endl;
 std::cout << r.header["CoNtEnT-tYpE"] << std::endl;
 ```
 
-All of these should print the same value, `"application/json"`. Cookies similarly are accessed through a map-like interface, but they're not case insensitive:
+All of these should print the same value, `"application/json"`. 
+
+On the other hand, Cookies are accessed through a vector-like interface, and you could access and check kinds of fields of a cookie:
 
 ```c++
 cpr::Response r = cpr::Get(cpr::Url{"http://www.httpbin.org/cookies/set?cookies=yummy"});
-std::cout << r.cookies["cookies"] << std::endl; // Prints yummy
-std::cout << r.cookies["Cookies"] << std::endl; // Prints nothing
+for(const auto &cookie : r.cookies) {
+    std::cout << cookie.GetDomain() << ":";
+    std::cout << cookie.IsIncludingSubdomains() << ":";
+    std::cout << cookie.GetPath() << ":";
+    std::cout << cookie.IsHttpsOnly() << ":";
+    std::cout << cookie.GetExpiresString() << ":";
+    std::cout << cookie.GetName() << ":";
+    std::cout << cookie.GetValue() << std::endl;
+    // For example, this will print: 
+    // www.httpbin.org:0:/:0:Thu, 01 Jan 1970 00:00:00 GMT:cookies:yummy
+}
 ```
 
 As you can see, the `Response` object is completely transparent. All of its data fields are accessible at all times, and since its only useful to you insofar as it has information to communicate, you can let it fall out of scope safely when you're done with it.
@@ -555,8 +566,17 @@ Earlier you saw how to grab a cookie from the request:
 
 ```c++
 cpr::Response r = cpr::Get(cpr::Url{"http://www.httpbin.org/cookies/set?cookies=yummy"});
-std::cout << r.cookies["cookies"] << std::endl; // Prints yummy
-std::cout << r.cookies["Cookies"] << std::endl; // Prints nothing
+for(const auto &cookie : r.cookies) {
+    std::cout << cookie.GetDomain() << ":";
+    std::cout << cookie.IsIncludingSubdomains() << ":";
+    std::cout << cookie.GetPath() << ":";
+    std::cout << cookie.IsHttpsOnly() << ":";
+    std::cout << cookie.GetExpiresString() << ":";
+    std::cout << cookie.GetName() << ":";
+    std::cout << cookie.GetValue() << std::endl;
+    // For example, this will print: 
+    // www.httpbin.org:0:/:0:Thu, 01 Jan 1970 00:00:00 GMT:cookies:yummy
+}
 ```
 
 You can send back cookies using the same object:
