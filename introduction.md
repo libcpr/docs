@@ -308,4 +308,4 @@ std::cout << r.text << std::endl;
  */
 ```
 
-With these basic operations, modern C++ has access to a significant portion of the world wide web's APIs. For more complex applications, check out the [Advanced Usage guides](/cpr/advanced-usage.html).
+With these basic operations, modern C++ has access to a significant portion of the world wide web's APIs. For more complex applications, check out the [Advanced Usage guides](/advanced-usage.html).
