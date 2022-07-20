@@ -406,6 +406,18 @@ cpr::Response r = cpr::Get(cpr::Url{"http://www.httpbin.org/get"},
 assert(r.elapsed <= 1); // Less than one second should have elapsed
 ```
 
+For the sake of simplicity, the duration can also be specified via `std::chrono_literal`:
+```c++
+#include <cassert>
+#include <chrono>
+
+using namespace std::chrono_literals;
+
+cpr::Response r = cpr::Get(cpr::Url{"http://www.httpbin.org/get"},
+                  cpr::Timeout{1s}); // Let's hope we aren't using Time Warner Cable
+assert(r.elapsed <= 1); // Less than one second should have elapsed
+```
+
 Setting the `Timeout` option sets the maximum allowed time the transfer operation can take. Since C++ Requests is built on top of libcurl, it's important to know what setting this `Timeout` does to the request. You can find more information about the specific libcurl option [here](http://curl.haxx.se/libcurl/c/CURLOPT_TIMEOUT_MS.html).
 
 ## Setting Callbacks
@@ -915,7 +927,7 @@ openssl dgst -sha256 -binary www.httpbin.org.pubkey.der | openssl base64
 
 Some HTTPS services require client certificates to be given at the time of connection for authentication and authorization.
 
-You can specify filenames for client certificates and private keys using the `CertFile` and `KeyFile` options.
+You can specify filepaths using `std::string` or `filesystem::path` for client certificates and private keys using the `CertFile` and `KeyFile` options.
 When using `libcurl` 7.71.0 or newer, you can also pass a private key using the `KeyBlob` option.
 
 Private key as a key path:
@@ -992,6 +1004,8 @@ cpr::Response r = cpr::Get(cpr::Url{"http://www.httpbin.org/get"},
                   cpr::Interface{"eth0"}); // eth0 will be used as outgoing interface
 ```
 {% endraw %}
+
+A `cpr::Interface` object can also be created via `std::string_view` instead of `std::string`.
 
 ## Local Port and Range
 
@@ -1073,12 +1087,12 @@ std::cout << r.text << std::endl;
 ```
 {% endraw %}
 
-To leave parts of the range empty,  `-1` can be specified as the boundary index when creating the partial range:
+To leave parts of the range empty,  `std::nullopt` can be specified as the boundary index when creating the partial range:
 
 {% raw %}
 ```c++
 cpr::Response r = cpr::Get(cpr::Url{"http://www.httpbin.org/headers"},
-                           cpr::Range{-1, 5});
+                           cpr::Range{std::nullopt, 5});
 std::cout << r.text << std::endl;
 /*
  * {

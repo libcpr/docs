@@ -37,6 +37,7 @@ Making a GET request with cpr is effortless:
 // Somewhere else
 cpr::Response r = cpr::Get(cpr::Url{"http://www.httpbin.org/get"});
 ```
+A `cpr::Url` object can also be created using `std::string_view` instead of `std::string` as parameter.
 
 This gives us a `Response` object which we've called `r`. There's a lot of good stuff in there:
 
@@ -143,7 +144,7 @@ std::cout << r.text << std::endl;
 ```
 {% endraw %}
 
-This sends up `"key=value"` as a `"x-www-form-urlencoded"` pair in the POST request. To send data raw and unencoded, use `Body` instead of `Payload`:
+This sends up `"key=value"` as a `"x-www-form-urlencoded"` pair in the POST request. To send data raw and unencoded, use `Body` which takes `std::string` or `std::string_view` as parameter instead of `Payload`:
 
 {% raw %}
 ```c++
