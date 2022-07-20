@@ -1207,3 +1207,67 @@ class ChangeRequestMethodToHeadInterceptor : public Interceptor {
 };
 ```
 {% endraw %}
+
+## Multi-Perform
+
+`cpr::MultiPerform` allows one to efficiently perform multiple requestst in a non-blocking fashion. To perform such a multi-perform, one must first create a `cpr::MultiPerform` object and add the desired session objects as shared pointers using the `AddSession` member function of `cpr::MultiPerform`:
+
+{% raw %}
+```c++
+// Create and setup session objects
+cpr::Url url{"https://www.httpbin.org/get"};
+std::shared_ptr<cpr::Session> session_1 = std::make_shared<cpr::Session>();
+std::shared_ptr<cpr::Session> session_2 = std::make_shared<cpr::Session>();
+session_1->SetUrl(url);
+session_2->SetUrl(url);
+
+// Create MultiPerform object
+cpr::MultiPerform multiperform;
+
+// Add sessions to the MultiPerform
+multiperform.AddSession(session_1);
+multiperform.AddSession(session_2);
+```
+{% endraw %}
+
+After adding the session objects, one can use the functions `Get`, `Delete`, `Put`, `Head`, `Options`, `Patch`, `Post`, and `Download` to execute the respective HTTP request on all added session objects and receive a vector of `cpr::Response` objects:
+
+{% raw %}
+```c++
+// Perform GET request on all previously added sessions
+std::vector<cpr::Response> responses = multiperform.Get();
+```
+{% endraw %}
+
+Since added sessions should not be used by their own as long as they are in use by a MultiPerform, it is possible to remove added sessions with `RemoveSession`:
+
+{% raw %}
+```c++
+// Remove the first session from the MultiPerform
+multiperform.RemoveSession(session_1);
+```
+{% endraw %}
+
+In addition, it is possible to make several different HTTP requests in one MultiPerform. To do this, one has to pass the HTTP method belonging to the session as the second parameter when adding it with `AddSession` and then execute the `Perform` function:
+
+{% raw %}
+```c++
+// Add sessions to the MultiPerform and specifying the HTTP Method
+multiperform.AddSession(session_1, cpr::MultiPerform::HttpMethod::GET_REQUEST);
+multiperform.AddSession(session_2, cpr::MultiPerform::HttpMethod::HEAD_REQUEST);
+
+// Perform the specified method per session
+multiperform.Perform();
+```
+{% endraw %}
+
+Note that `cpr::MultiPerform::HttpMethod::DOWNLOAD_REQUEST` cannot be combined with other request methods.
+
+Finally, for ease of use, there are the following API functions, which automatically create a MultiPerform object and required session objects to perform a multi perform: `cpr::MultiGet`, `cpr::MultiDelete`, `cpr::MultiPut`, `cpr::MultiHead`, `cpr::MultiOptions`, `cpr::MultiPatch`, `cpr::MultiPost`:
+{% raw %}
+```c++
+// Performs two HTTP Get requests to https://www.httpbin.org/get, where the first one has an additional timeout option set.
+// The number of parameter tuples specifies the number of sessions which will be internally created
+std::vector<Response> responses = MultiGet(std::tuple<Url, Timeout>{Url{"https://www.httpbin.org/get"}, Timeout{1000}}, std::tuple<Url>{Url{"https://www.httpbin.org/get"}});
+```
+{% endraw %}
