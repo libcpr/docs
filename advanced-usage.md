@@ -408,7 +408,7 @@ assert(r.elapsed <= 1); // Less than one second should have elapsed
 
 For the sake of simplicity, the duration can also be specified via `std::chrono_literal`:
 ```c++
-#include <assert.h>
+#include <cassert>
 #include <chrono>
 
 using namespace std::chrono_literals;
