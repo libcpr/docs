@@ -204,18 +204,29 @@ std::cout << r.text << std::endl;
 
 Notice how the `"Content-Type"` in the return header is different now; it's `"multipart/form-data"` as opposed to `"x-www-form-urlencoded"`. This facilitates larger and more generic data uploads with POST.
 
-Uploading a file using `Muitipart` sets the uploaded `"filename"` to it's path name by default. 
+Uploading a file or files using `Muitipart` sets the uploaded `"filename"` to it's path name by default. 
 To change this, you can override the `"filename"` for the uploaded file:
 
 {% raw %}
 ```c++
-// The uploaded filename is the filename of "path-to-file"
+// The uploaded file is named "path-to-file"
 cpr::Response r = cpr::Post(cpr::Url{"http://www.httpbin.org/post"},
                   cpr::Multipart{{"part-name", cpr::File{"path-to-file"}}});
 
-// The uploaded file name will be set to "new-file-name"
+// The uploaded file is named "new-file-name"
 cpr::Response r = cpr::Post(cpr::Url{"http://www.httpbin.org/post"},
-                  cpr::Multipart{{"part-name", "new-file-name", cpr::File{"path-to-file"}}});
+                  cpr::Multipart{{"part-name", cpr::File{"path-to-file", "new-file-name"}}});
+
+// The uploaded files are named "path-to-file1" and "path-to-file2"
+cpr::Response r = cpr::Post(cpr::Url{"http://www.httpbin.org/post"},
+                  cpr::Multipart{{"part-name", cpr::Files{"path-to-file1", "path-to-file2"}}});
+
+// The uploaded files are named "new-file-name1" and "new-file-name2"
+cpr::Response r = cpr::Post(cpr::Url{"http://www.httpbin.org/post"},
+                  cpr::Multipart{{"part-name", cpr::Files{
+                                       File{"path-to-file1", "new-file-name1"},
+                                       File{"path-to-file2", "new-file-name2"},
+                               }}});
 ```
 {% endraw %}
 
