@@ -1293,6 +1293,7 @@ int main() {
 */
 ```
 {% endraw %}
+
 ## Multi-Perform
 
 `cpr::MultiPerform` allows one to efficiently perform multiple requestst in a non-blocking fashion. To perform such a multi-perform, one must first create a `cpr::MultiPerform` object and add the desired session objects as shared pointers using the `AddSession` member function of `cpr::MultiPerform`:
