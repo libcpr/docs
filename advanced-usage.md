@@ -314,7 +314,7 @@ The call is otherwise identical except instead of `Get`, it's `GetAsync`. Simila
 
 ```c++
 AsyncResponse fr = cpr::GetAsync(cpr::Url{"http://www.httpbin.org/get"});
-fr.wait() // This waits until the request is complete
+fr.wait(); // This waits until the request is complete
 cpr::Response r = fr.get(); // Since the request is complete, this returns immediately
 std::cout << r.text << std::endl;
 ```
