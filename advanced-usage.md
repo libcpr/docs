@@ -1271,3 +1271,19 @@ Finally, for ease of use, there are the following API functions, which automatic
 std::vector<Response> responses = MultiGet(std::tuple<Url, Timeout>{Url{"https://www.httpbin.org/get"}, Timeout{1000}}, std::tuple<Url>{Url{"https://www.httpbin.org/get"}});
 ```
 {% endraw %}
+
+## Manual domain name resolution (Resolve)
+
+It is possible to specify which IP address should a specific domain name and port combination resolve to. It is possible to provide such a list of hostnames, addresses and ports. For example, it is possible to specify that www.example.com using port 443 should resolve to 127.0.0.1, but www.example.com using port 80 should resolve to 127.0.0.2, whereas subdomain.example.com using ports 443 and 80 should resolve to 127.0.0.3.
+
+{% raw %}
+```c++
+cpr::Response getResponse = cpr::Get(cpr::Url{"https://www.example.com"},
+                                     std::vector<cpr::Resolve>({cpr::Resolve{"www.example.com", "127.0.0.1", {443}}, 
+                                                                cpr::Resolve{"www.example.com", "127.0.0.2", {80}}},
+                                                                cpr::Resolve{"subdomain.example.com", "127.0.0.3"}}));
+// Not specifying any ports defaults to 80 and 443
+```
+{% endraw %}
+
+It is also possible to use the ```setResolve``` and ```setResolves``` methods, however, it should be noted that each invocation clears any previous values set before. In other words, do not use multiple consecutive calls to ```setResolve``` to set multiple manual resolutions, but create a vector of ```cpr::Resolve```-s and pass them to ```setResolves```.
