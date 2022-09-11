@@ -1286,4 +1286,4 @@ cpr::Response getResponse = cpr::Get(cpr::Url{"https://www.example.com"},
 ```
 {% endraw %}
 
-It is also possible to use the ```setResolve``` and ```setResolves``` methods, however, it should be noted that each invocation clears any previous values set before. In other words, do not use multiple consecutive calls to ```setResolve``` to set multiple manual resolutions, but create a vector of ```cpr::Resolve```-s and pass them to ```setResolves```.
+It is also possible to use the ```setResolve``` and ```setResolves``` methods, however, it should be noted that each invocation clears any previous values set before. In other words, do not use multiple consecutive calls to ```setResolve``` to set multiple manual resolutions, instead create a vector of ```cpr::Resolve```-s and pass them to ```setResolves```.
