@@ -1124,7 +1124,13 @@ session.SetOption(cpr::MultiRange{cpr::Range{1, 3},
 
 Cpr offers the possibility to pass user-implemented interceptors to a session, which can then monitor, modify and repeat requests.
 
-Each interceptor implementation must inherit from the abstract class `cpr::Interceptor` and implement the function `cpr::Response intercept(cpr::Session& session)`. This function is automatically called for every added interceptor during the request with the session object belonging to the request passed as a parameter. An essential point of the intercept function is that it must call the `cpr::Response proceed(Session& session)` function implemented in `cpr::Interceptor`. This is neccessary to continue the request and get the `cpr::Response` object.
+### Single Session
+
+Each interceptor implementation must inherit from the abstract class `cpr::Interceptor` for intercepting regular `cpr::Sessions` objects.
+The inherited class has to implement the function `cpr::Response intercept(cpr::Session& session)`. 
+This function is automatically called for every added interceptor during the request with the session object belonging to the request passed as a parameter.
+An essential point of the intercept function is that it must call the `cpr::Response proceed(Session& session)` function implemented in `cpr::Interceptor`.
+This is necessary to continue the request and get the `cpr::Response` object.
 
 Here is an example implementation for an interceptor that logs the request without changing it:
 
@@ -1191,6 +1197,60 @@ class ChangeRequestMethodToHeadInterceptor : public Interceptor {
         return proceed(session, Interceptor::ProceedHttpMethod::HEAD_REQUEST);
     }
 };
+```
+{% endraw %}
+
+### Multiperform
+
+It is also possible to intercept `cpr::InterceptorMulti` calls.
+Each interceptor implementation must inherit from the abstract class `cpr::InterceptorMulti` for intercepting `cpr::MultiPerform` objects.
+The inherited class has to implement the function `std::vector<Response> intercept(MultiPerform&)`. 
+This function is automatically called for every added interceptor during the request with the session object belonging to the request passed as a parameter.
+An essential point of the intercept function is that it must call the `std::vector<Response> proceed()` for `cpr::InterceptorMulti`) function implemented in `cpr::Interceptor` (`cpr::InterceptorMulti`). This is necessary to continue the request and get the `cpr::Response` (`std::vector<Response>`) object.
+
+Here is an example implementation for an interceptor that logs the request without changing it:
+
+{% raw %}
+```c++
+#include <iostream>
+#include <vector>
+#include <memory>
+#include <cpr/cpr.h>
+
+class LoggingInterceptorMulti : public InterceptorMulti {
+  public:
+    std::vector<Response> intercept(MultiPerform& multi) {
+        // Log the request URL
+        std::cout << "Request url:  " << multi.GetSessions().front().first->GetFullRequestUrl(); << '\n';
+
+        // Proceed the request and save the response
+        std::vector<cpr::Response> response = proceed(multi);
+
+        // Log response status code
+        std::cout << "Response status code:  " << response.front().status_code << '\n';
+
+        // Return the stored response
+        return response;
+    }
+};
+
+int main() {
+    Url url{"https://www.httpbin.org/get"};
+    std::shared_ptr<Session> session = std::make_shared<Session>();
+    session->SetUrl(url);
+
+    MultiPerform multi;
+    multi.AddSession(session);
+    multi.AddInterceptor(std::make_shared<LoggingInterceptorMulti>());
+
+    std::vector<Response> response = multi.Get();
+}
+
+/*
+* Output produced by the LoggingInterceptorMulti:
+*   Request url: https://www.httpbin.org/get
+*   Response status code: 200
+*/
 ```
 {% endraw %}
 
