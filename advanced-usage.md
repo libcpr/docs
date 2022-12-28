@@ -406,6 +406,18 @@ cpr::Response r = cpr::Get(cpr::Url{"http://www.httpbin.org/get"},
 assert(r.elapsed <= 1); // Less than one second should have elapsed
 ```
 
+For the sake of simplicity, the duration can also be specified via `std::chrono_literal`:
+```c++
+#include <cassert>
+#include <chrono>
+
+using namespace std::chrono_literals;
+
+cpr::Response r = cpr::Get(cpr::Url{"http://www.httpbin.org/get"},
+                  cpr::Timeout{1s}); // Let's hope we aren't using Time Warner Cable
+assert(r.elapsed <= 1); // Less than one second should have elapsed
+```
+
 Setting the `Timeout` option sets the maximum allowed time the transfer operation can take. Since C++ Requests is built on top of libcurl, it's important to know what setting this `Timeout` does to the request. You can find more information about the specific libcurl option [here](http://curl.haxx.se/libcurl/c/CURLOPT_TIMEOUT_MS.html).
 
 ## Setting Callbacks
@@ -915,7 +927,7 @@ openssl dgst -sha256 -binary www.httpbin.org.pubkey.der | openssl base64
 
 Some HTTPS services require client certificates to be given at the time of connection for authentication and authorization.
 
-You can specify filenames for client certificates and private keys using the `CertFile` and `KeyFile` options.
+You can specify filepaths using `std::string` or `filesystem::path` for client certificates and private keys using the `CertFile` and `KeyFile` options.
 When using `libcurl` 7.71.0 or newer, you can also pass a private key using the `KeyBlob` option.
 
 Private key as a key path:
@@ -992,6 +1004,8 @@ cpr::Response r = cpr::Get(cpr::Url{"http://www.httpbin.org/get"},
                   cpr::Interface{"eth0"}); // eth0 will be used as outgoing interface
 ```
 {% endraw %}
+
+A `cpr::Interface` object can also be created via `std::string_view` instead of `std::string`.
 
 ## Local Port and Range
 
@@ -1073,12 +1087,12 @@ std::cout << r.text << std::endl;
 ```
 {% endraw %}
 
-To leave parts of the range empty,  `-1` can be specified as the boundary index when creating the partial range:
+To leave parts of the range empty,  `std::nullopt` can be specified as the boundary index when creating the partial range:
 
 {% raw %}
 ```c++
 cpr::Response r = cpr::Get(cpr::Url{"http://www.httpbin.org/headers"},
-                           cpr::Range{-1, 5});
+                           cpr::Range{std::nullopt, 5});
 std::cout << r.text << std::endl;
 /*
  * {
@@ -1253,7 +1267,6 @@ int main() {
 */
 ```
 {% endraw %}
-
 ## Multi-Perform
 
 `cpr::MultiPerform` allows one to efficiently perform multiple requestst in a non-blocking fashion. To perform such a multi-perform, one must first create a `cpr::MultiPerform` object and add the desired session objects as shared pointers using the `AddSession` member function of `cpr::MultiPerform`:
@@ -1317,3 +1330,19 @@ Finally, for ease of use, there are the following API functions, which automatic
 std::vector<Response> responses = MultiGet(std::tuple<Url, Timeout>{Url{"https://www.httpbin.org/get"}, Timeout{1000}}, std::tuple<Url>{Url{"https://www.httpbin.org/get"}});
 ```
 {% endraw %}
+
+## Manual domain name resolution (Resolve)
+
+It is possible to specify which IP address should a specific domain name and port combination resolve to. It is possible to provide such a list of hostnames, addresses and ports. For example, it is possible to specify that www.example.com using port 443 should resolve to 127.0.0.1, but www.example.com using port 80 should resolve to 127.0.0.2, whereas subdomain.example.com using ports 443 and 80 should resolve to 127.0.0.3.
+
+{% raw %}
+```c++
+cpr::Response getResponse = cpr::Get(cpr::Url{"https://www.example.com"},
+                                     std::vector<cpr::Resolve>({cpr::Resolve{"www.example.com", "127.0.0.1", {443}}, 
+                                                                cpr::Resolve{"www.example.com", "127.0.0.2", {80}}},
+                                                                cpr::Resolve{"subdomain.example.com", "127.0.0.3"}}));
+// Not specifying any ports defaults to 80 and 443
+```
+{% endraw %}
+
+It is also possible to use the ```setResolve``` and ```setResolves``` methods, however, it should be noted that each invocation clears any previous values set before. In other words, do not use multiple consecutive calls to ```setResolve``` to set multiple manual resolutions, instead create a vector of ```cpr::Resolve```-s and pass them to ```setResolves```.

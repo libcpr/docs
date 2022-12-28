@@ -7,7 +7,7 @@ title: cpr - C++ Requests
 
 C++ Requests is a simple wrapper around [libcurl](http://curl.haxx.se/libcurl) inspired by the excellent [Python Requests](https://github.com/kennethreitz/requests) project.
 
-Despite its name, libcurl's easy interface is anything but, and making mistakes misusing it is a common source of error and frustration. Using the more expressive language facilities of C++11, this library captures the essence of making network calls into a few concise idioms.
+Despite its name, libcurl's easy interface is anything but, and making mistakes misusing it is a common source of error and frustration. Using the more expressive language facilities of C++17, this library captures the essence of making network calls into a few concise idioms.
 
 Here's a quick GET request:
 
@@ -53,6 +53,7 @@ C++ Requests currently supports:
 * PATCH methods
 * Thread Safe access to [libCurl](https://curl.haxx.se/libcurl/c/threadsafe.html)
 * OpenSSL and WinSSL support for HTTPS requests
+* Manual domain name resolution
 
 ## Planned
 
@@ -101,7 +102,7 @@ If there's no package for your distribution, try making one! If you do, and it i
 
 The only explicit requirements are:
 
-* a `C++11` compatible compiler such as Clang or GCC. The minimum required version of GCC is unknown, so if anyone has trouble building this library with a specific version of GCC, do let me know
+* a `C++17` compatible compiler such as Clang or GCC. The minimum required version of GCC is unknown, so if anyone has trouble building this library with a specific version of GCC, do let me know
 * If you would like to perform https requests `OpenSSL` and its development libraries are required.
 
 ## Building cpr - Using vcpkg
