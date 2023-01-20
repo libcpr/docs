@@ -5,7 +5,7 @@ title: cpr - Introduction
 
 ## Design
 
-C++ Requests is designed to be as simple and pleasant to use as possible. HTTP method invokations through the primary API are short-lived and stateless -- this library firmly believes that [Resource Acquisition Is Initialization](https://en.wikipedia.org/wiki/Resource_Acquisition_Is_Initialization). Cleanup is as easy and intuitive as letting an object fall out of scope. You won't find any `init()` or `close()` methods here, and proper use of this library requires neither `delete` nor `free`.
+C++ Requests is designed to be as simple and pleasant to use as possible. HTTP method invocations through the primary API are short-lived and stateless -- this library firmly believes that [Resource Acquisition Is Initialization](https://en.wikipedia.org/wiki/Resource_Acquisition_Is_Initialization). Cleanup is as easy and intuitive as letting an object fall out of scope. You won't find any `init()` or `close()` methods here, and proper use of this library requires neither `delete` nor `free`.
 
 In cpr, options are actually _options_ so if you don't set them they'll default to sensible values. This is facilitated by the keyword args-like interface:
 
