@@ -87,7 +87,7 @@ std::cout << r.header["Content-Type"] << std::endl;
 std::cout << r.header["CoNtEnT-tYpE"] << std::endl;
 ```
 
-All of these should print the same value, `"application/json"`. 
+All of these should print the same value, `"application/json"`.
 
 On the other hand, Cookies are accessed through a vector-like interface, and you could access and check kinds of fields of a cookie:
 
@@ -101,7 +101,7 @@ for(const auto &cookie : r.cookies) {
     std::cout << cookie.GetExpiresString() << ":";
     std::cout << cookie.GetName() << ":";
     std::cout << cookie.GetValue() << std::endl;
-    // For example, this will print: 
+    // For example, this will print:
     // www.httpbin.org:0:/:0:Thu, 01 Jan 1970 00:00:00 GMT:cookies:yummy
 }
 ```
@@ -147,7 +147,7 @@ std::cout << r.text << std::endl;
 /*
  * "headers": {
  *   "Accept": "application/json",
- *   "Accept-Encoding": "deflate, gzip", 
+ *   "Accept-Encoding": "deflate, gzip",
  *   "Authorization": "token",
  *   "Host": "www.httpbin.org",
  *   "User-Agent": "curl/7.81.0"
@@ -253,21 +253,21 @@ cpr::Response response = session.Complete(curl_result);
 
 ## HTTP Compression
 
-HTTP compression is a capability that can improve transfer speed and bandwidth utilization between web servers and web clients. 
-When you issue a HTTP request, you could specify the supported compression schemes in the header: Accept-Encoding. 
+HTTP compression is a capability that can improve transfer speed and bandwidth utilization between web servers and web clients.
+When you issue a HTTP request, you could specify the supported compression schemes in the header: Accept-Encoding.
 With this setting, you could avoid unexpected compression schemes or use the desired schemes:
 
 {% raw %}
 ```c++
 cpr::Response r = cpr::Get(cpr::Url{"http://www.httpbin.org/get"},
-                  cpr::AcceptEncoding{{cpr::AcceptEncodingMethods::deflate, cpr::AcceptEncodingMethods::gzip, cpr::AcceptEncodingMethods::zlib}}); 
+                  cpr::AcceptEncoding{{cpr::AcceptEncodingMethods::deflate, cpr::AcceptEncodingMethods::gzip, cpr::AcceptEncodingMethods::zlib}});
 // or you could specify specific schemes with the customized string
 cpr::Response r = cpr::Get(cpr::Url{"http://www.httpbin.org/get"},
-                  cpr::AcceptEncoding{{"deflate", "gzip", "zlib"}}); 
+                  cpr::AcceptEncoding{{"deflate", "gzip", "zlib"}});
 ```
 {% endraw %}
 
-Also, you could use `cpr::Session` to make the connection stateful: 
+Also, you could use `cpr::Session` to make the connection stateful:
 
 {% raw %}
 ```c++
@@ -310,7 +310,7 @@ cpr::Response r = fr.get(); // This blocks until the request is complete
 std::cout << r.text << std::endl;
 ```
 
-The call is otherwise identical except instead of `Get`, it's `GetAsync`. Similarly for POST requests, you would call `PostAsync`. The return value of an asynchronous call is actually a `std::future<Response>`:
+The call is otherwise identical except instead of `Get`, it's `GetAsync`. Similarly for POST requests, you would call `PostAsync`. The return value of an asynchronous call is actually an `AsyncWrapper<Response>`, which exposes public member functions analogous to those of [`std::future<T>`](https://en.cppreference.com/w/cpp/thread/future):
 
 ```c++
 cpr::AsyncResponse fr = cpr::GetAsync(cpr::Url{"http://www.httpbin.org/get"});
@@ -323,18 +323,44 @@ You can even put a bunch of requests into a `std` container and get them all lat
 
 {% raw %}
 ```c++
-std::vector<std::future<cpr::Response>> container{};
+std::vector<cpr::AsyncResponse> container{};
 cpr::Url url = cpr::Url{"http://www.httpbin.org/get"};
 for (int i = 0; i < 10; ++i) {
     container.emplace_back(cpr::GetAsync(url, cpr::Parameters{{"i", std::to_string(i)}}));
 }
 // Sometime later
-for (std::future<cpr::Response>& fr: container) {
-    cpr::Response r = fr.get();
+for (cpr::AsyncResponse& ar: container) {
+    cpr::Response r = ar.get();
     std::cout << r.text << std::endl;
 }
 ```
 {% endraw %}
+
+Alternatively, you can use the  `Multi<method>Async` to bundle multiple requests and execute them in parallel. The requests' parameters are delivered as positional arguments to an async method of your choice, packed in `std::tuple` or `std::array`s, just like the `Multi<method>` API functions. `MultiAsync` makes use of `cpr`'s threadpool-based parallelism, and also offers the capability to **cancel transactions** while they are underway. Here's an example:
+
+{% raw %}
+```c++
+// The second template parameter denotes a cancellable transaction
+using AsyncResC = cpr::AsyncWrapper<Response, true>;
+
+cpr::Url postUrl{"http://www.httpbin.org/post"};
+std::vector<AsyncResC>responses{MultiPostAsync(
+    std::tuple{post_url, cpr::Payload{{"name", "Alice"}}},
+    std::tuple{post_url, cpr::Payload{{"role", "admin"}}}
+    // ...
+)};
+// If the first transaction isn't completed within 10 ms, we'd like to cancel all of them
+bool all_cancelled{false};
+if(responses.at(0).wait_for(std::chrono::milliseconds(10)) == std::future_status::timeout) {
+    all_cancelled = true;
+    for(AsyncResC& res: responses) {
+        all_cancelled &= (res.Cancel() == CancellationResult::success);
+    }
+}
+// If not cancelled, process results
+```
+{% endraw %}
+
 
 Asynchronous requests can also be performed using a `cpr::Session` object. It is important to note that the asynchronous request is performed directly on the session object, modifying it in the process.
 To ensure that the lifetime of the session is properly extended, the session object used **must be** managed by a `std::shared_ptr`. This restriction is necessary because the implementation uses `std::shared_from_this` to pass a pointer to the ansynchronous lambda function which would otherwise throw a `std::bad_weak_ptr` exception.
@@ -586,7 +612,7 @@ for(const auto &cookie : r.cookies) {
     std::cout << cookie.GetExpiresString() << ":";
     std::cout << cookie.GetName() << ":";
     std::cout << cookie.GetValue() << std::endl;
-    // For example, this will print: 
+    // For example, this will print:
     // www.httpbin.org:0:/:0:Thu, 01 Jan 1970 00:00:00 GMT:cookies:yummy
 }
 ```
@@ -988,7 +1014,7 @@ X509v3 Authority Key Identifier:keyid:0A:BC:08:29:17:8C:A5:39:6D:7A:0E:CE:33:C7:
 It is also possible to specify the outgoing interface used by [libcurl](http://curl.haxx.se/libcurl/).
 By default the TCP stack decides which interface to use for this request.
 You can change this behavior by passing the `cpr::Interface` option to your request.
-Passing an empty string corresponds to passing a `nullptr` to `CURLOPT_INTERFACE`.  
+Passing an empty string corresponds to passing a `nullptr` to `CURLOPT_INTERFACE`.
 Further details: https://curl.se/libcurl/c/CURLOPT_INTERFACE.html
 
 {% raw %}
@@ -1079,7 +1105,7 @@ std::cout << r.text << std::endl;
 /*
  * {
  *   "headers": {
- *     "Range": "bytes=1-5", 
+ *     "Range": "bytes=1-5",
  *     ...
  *   }
  * }
@@ -1097,7 +1123,7 @@ std::cout << r.text << std::endl;
 /*
  * {
  *   "headers": {
- *     "Range": "bytes=-5", 
+ *     "Range": "bytes=-5",
  *     ...
  *   }
  * }
@@ -1109,13 +1135,13 @@ Moreover, multiple ranges can be specified in a single request with `cpr::MultiR
 
 {% raw %}
 ```c++
-cpr::Response r = cpr::Get(cpr::Url{"http://www.httpbin.org/headers"}, 
+cpr::Response r = cpr::Get(cpr::Url{"http://www.httpbin.org/headers"},
                            cpr::MultiRange{cpr::Range{1, 3}, cpr::Range{5, 6}});
 std::cout << r.text << std::endl;
 /*
  * {
  *   "headers": {
- *     "Range": "bytes=1-3, 5-6", 
+ *     "Range": "bytes=1-3, 5-6",
  *     ...
  *   }
  * }
@@ -1129,7 +1155,7 @@ As always, there is of course also the possibility to set the range of a session
 ```c++
 cpr::Session session;
 session.SetOption(cpr::Range{1, 3});                    // Alternative: SetRange()
-session.SetOption(cpr::MultiRange{cpr::Range{1, 3}, 
+session.SetOption(cpr::MultiRange{cpr::Range{1, 3},
                                   cpr::Range{5, 6}});   // Alternative: SetMultiRange()
 ```
 {% endraw %}
@@ -1141,7 +1167,7 @@ Cpr offers the possibility to pass user-implemented interceptors to a session, w
 ### Single Session
 
 Each interceptor implementation must inherit from the abstract class `cpr::Interceptor` for intercepting regular `cpr::Sessions` objects.
-The inherited class has to implement the function `cpr::Response intercept(cpr::Session& session)`. 
+The inherited class has to implement the function `cpr::Response intercept(cpr::Session& session)`.
 This function is automatically called for every added interceptor during the request with the session object belonging to the request passed as a parameter.
 An essential point of the intercept function is that it must call the `cpr::Response proceed(Session& session)` function implemented in `cpr::Interceptor`.
 This is necessary to continue the request and get the `cpr::Response` object.
@@ -1198,7 +1224,7 @@ Response response = session.Get();
 ```
 {% endraw %}
 
-It should be noted that interceptors can make changes to the session object that is later passed to the proceed function and can thus fundamentally change the request. Of course, the returned response object can also be modified. 
+It should be noted that interceptors can make changes to the session object that is later passed to the proceed function and can thus fundamentally change the request. Of course, the returned response object can also be modified.
 
 In addition, interceptors can even change the http method of the request by passing the proceed method another parameter of the enum type `cpr::Interceptor::ProceedHttpMethod`. The parameter required for download requests is also simply passed to the proceed method. For example we can implement an interceptor which changes the request method to `HEAD`:
 
@@ -1218,7 +1244,7 @@ class ChangeRequestMethodToHeadInterceptor : public Interceptor {
 
 It is also possible to intercept `cpr::InterceptorMulti` calls.
 Each interceptor implementation must inherit from the abstract class `cpr::InterceptorMulti` for intercepting `cpr::MultiPerform` objects.
-The inherited class has to implement the function `std::vector<Response> intercept(MultiPerform&)`. 
+The inherited class has to implement the function `std::vector<Response> intercept(MultiPerform&)`.
 This function is automatically called for every added interceptor during the request with the session object belonging to the request passed as a parameter.
 An essential point of the intercept function is that it must call the `std::vector<Response> proceed()` for `cpr::InterceptorMulti`) function implemented in `cpr::Interceptor` (`cpr::InterceptorMulti`). This is necessary to continue the request and get the `cpr::Response` (`std::vector<Response>`) object.
 
@@ -1338,7 +1364,7 @@ It is possible to specify which IP address should a specific domain name and por
 {% raw %}
 ```c++
 cpr::Response getResponse = cpr::Get(cpr::Url{"https://www.example.com"},
-                                     std::vector<cpr::Resolve>({cpr::Resolve{"www.example.com", "127.0.0.1", {443}}, 
+                                     std::vector<cpr::Resolve>({cpr::Resolve{"www.example.com", "127.0.0.1", {443}},
                                                                 cpr::Resolve{"www.example.com", "127.0.0.2", {80}}},
                                                                 cpr::Resolve{"subdomain.example.com", "127.0.0.3"}}));
 // Not specifying any ports defaults to 80 and 443
