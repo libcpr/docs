@@ -34,7 +34,24 @@ $ cmake --build . --target test
 $ ./bin/session_tests
 
 # See more options to run test suites, such as isolating specific tests
-$ ./bin/session_tests --help
+$ ./bin/download_tests --help
+
+# Debug a test set
+$ gdb ./bin/multiperform_tests
+
+# See all targets for different Makefiles
+$ make help
+$ cd test && make help
 ```
 {% endraw %}
 
+## Project Structure
+Here we will briefly describe different functional parts of CPR, and mention the headers that are most relevant to them. As any software project's, of course, CPR's parts are interconnected, and most classes play a part in most operations. Here, we will constrain ourselves to the most crucial ones. Where relevant headers are suggested, it's recommended to also look at the appropriate source file, if it exists.
+### The API Interface
+Relevant Headers: `api.h`, `cpr.h`
+
+Here we have the templates that are instantiated to create the cpr API methods. The namespace `priv` contains the intternal functions, particularly relevant for the `Multi`-methods.
+### The Session class
+Relevant Headers: `session.h`
+
+This class implements most of the logic used by `cpr`. Here, the `curl` `easy-` or `multi-` sessions are constructed, executed, the result packed in a `Response` instance and returned. It is _Moveable_, not _Copyable_, and can have shared ownership. Usage of the `Session` class usually entails construction, the setting of various parameters, either through the `Session::SetParam` methods like, for example, `Session::SetUrl`, or the equivalent polymorphic `Session::SetOption` method, and finally calling the appropriate method, like `Session::Get`. The set-up for the `curl` session happens, to a large degree, inside the `Session::PrepareAction` methods (where `Action` is the corresponding HTTP action).
