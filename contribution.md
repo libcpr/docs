@@ -8,9 +8,9 @@ Here we aim to cover some topics that will make getting into CPR development and
 
 In this document, we will be referencing files by their filename, relative to the appropriate root folder. Here are some particularly relevant ones, relative to project root:
 
-* header files have the suffix `.h` and are located in [`include/cpr`](https://github.com/libcpr/cpr/tree/master/include/cpr).
-* source files have the suffix `.cpp` and are located in [`cpr`](https://github.com/libcpr/cpr/tree/master/cpr).
-* most files related to testing are located in [`test`](https://github.com/libcpr/cpr/tree/master/test).
+* Header files have the suffix `.h` and are located in [`include/cpr`](https://github.com/libcpr/cpr/tree/master/include/cpr).
+* Source files have the suffix `.cpp` and are located in [`cpr`](https://github.com/libcpr/cpr/tree/master/cpr).
+* Most files related to testing are located in [`test`](https://github.com/libcpr/cpr/tree/master/test).
 
 ## Building, Testing and Debugging
 For a project that relies on template metaprogramming, such as CPR, compiling tests ensures that templates are instantiated during compilation. Testing and debugging features are enabled through setting certain cmake variables, which can be found in full in [`CMakeLists.txt`](https://github.com/libcpr/cpr/blob/master/CMakeLists.txt). We'd like to single out `CPR_BUILD_TESTS` and `CPR_DEBUG_SANITIZER_FLAG_ALL`, which enable the building of tests and the usage of a number of sanitizers. A debug build could be achieved as follows:
