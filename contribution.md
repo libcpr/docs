@@ -13,7 +13,11 @@ In this document, we will be referencing files by their filename, relative to th
 * Most files related to testing are located in [`test`](https://github.com/libcpr/cpr/tree/master/test).
 
 ## Building, Testing and Debugging
-For a project that relies on template metaprogramming, such as CPR, compiling tests ensures that templates are instantiated during compilation. Testing and debugging features are enabled through setting certain cmake variables, which can be found in full in [`CMakeLists.txt`](https://github.com/libcpr/cpr/blob/master/CMakeLists.txt). We'd like to single out `CPR_BUILD_TESTS` and `CPR_DEBUG_SANITIZER_FLAG_ALL`, which enable the building of tests and the usage of a number of sanitizers. A debug build could be achieved as follows:
+For a project that relies on template meta programming, such as CPR, compiling tests ensures that templates are instantiated during compilation.
+Test and debug options are controlled via a set of CMake variables.
+They are located inside the root [`CMakeLists.txt`](https://github.com/libcpr/cpr/blob/master/CMakeLists.txt) file.
+Take a look at the option definitions starting with `cpr_option(...)`.
+We'd like to single out `CPR_BUILD_TESTS` and `CPR_DEBUG_SANITIZER_FLAG_ALL`, which enable building tests and the usage of a number of sanitizers. A debug build could be achieved as follows:
 
 {% raw %}
 ```bash
@@ -21,14 +25,15 @@ For a project that relies on template metaprogramming, such as CPR, compiling te
 $ mkdir build && cd build
 
 # Make a Debug build with tests and sanitizers enabled
-$ cmake -DCPR_BUILD_TESTS=1 -DCPR_DEBUG_SANITIZER_FLAG_ALL=1 -DCMAKE_BUILD_TYPE=Debug ..
+$ cmake -DCPR_BUILD_TESTS=ON -DCPR_DEBUG_SANITIZER_FLAG_ALL=ON -DCMAKE_BUILD_TYPE=Debug ..
 
-# Build the project. The '-- -j7' part enables parallelization of build tasks.
+# Build the project. The '--parallel' part enables parallel build tasks. Without specifying any number behind `--parallel`, you allow CMake to pick the appropriate number of parallel build tasks.
+# To set a specific number (n) of parallel build tasks: '--paralle n'
 # You may use a different number depending on your hardware, or omit this bit.
-$ cmake --build . -- -j7
+$ cmake --build . --parallel
 
 # Run all tests
-$ cmake --build . --target test
+$ cmake --build . --target test --parallel
 
 # Run a specific test set
 $ ./bin/session_tests
@@ -46,7 +51,9 @@ $ cd test && make help
 {% endraw %}
 
 ## Project Structure
-Here we will briefly describe different functional parts of CPR, and mention the headers that are most relevant to them. As any software project's, of course, CPR's parts are interconnected, and most classes play a part in most operations. Here, we will constrain ourselves to the most crucial ones. Where relevant headers are suggested, it's recommended to also look at the appropriate source file, if it exists.
+Here we briefly describe different functional parts of CPR, and mention the headers that are most relevant to them. As any software project's, of course, CPR's parts are interconnected, and most classes play a part in most operations.
+We will constrain ourselves to the most crucial ones.
+Where relevant headers are suggested, it's recommended to also look at the appropriate source file, if it exists.
 ### The API Interface
 Relevant Headers: [`api.h`](https://github.com/libcpr/cpr/blob/master/include/cpr/api.h), [`cpr.h`](https://github.com/libcpr/cpr/blob/master/include/cpr/cpr.h)
 
@@ -69,9 +76,8 @@ These containers are intended to be provided to API functions in order to genera
 ### Infrastructure for Asynchronous Requests
 Relevant Headers: [`async.h`](https://github.com/libcpr/cpr/blob/master/include/cpr/async.h), [`singleton.h`](https://github.com/libcpr/cpr/blob/master/include/cpr/singleton.h), [`threadpool.h`](https://github.com/libcpr/cpr/blob/master/include/cpr/threadpool.h)
 
-These are headers used by the Asynchronous and Multiple Asynchronous requests API features. These are used to instantiate a [`std::packaged_task`](https://en.cppreference.com/w/cpp/thread/packaged_task), which is emplaced on a queue (see `Threadpool::tasks`), and the `std::future` associated with the task is returned by the API function to the caller wrapped in a `cpr::AsyncWrapper`.
-Elements of the `tasks` queue are popped by the worker threads of the `cpr::GlobalThreadpool` (see `async.h`), and processed by instantiating a `cpr::Session` and resolving the request within the thread. Once the return value of the request has been generated (usually a `cpr::Response`), it can be gotten through `AsyncWrapper::get`.
+These headers are used by the Asynchronous and Multiple Asynchronous requests API features. They are used to instantiate a [`std::packaged_task`](https://en.cppreference.com/w/cpp/thread/packaged_task), which is emplaced on a queue (see `Threadpool::tasks`), and the `std::future` associated with the task is returned by the API function to the caller wrapped in a `cpr::AsyncWrapper`.
+Elements of the `tasks` queue are popped by worker threads of `cpr::GlobalThreadpool` (see `async.h`), and processed by instantiating a `cpr::Session` and resolving the request within the thread. Once the return value of the request has been generated (usually a `cpr::Response`), it can be gotten through `AsyncWrapper::get`.
 
 ## Testing and Writing Tests
-
 Test suites for CPR use the [gtest](https://google.github.io/googletest/) framework, and CPR's own [HttpServer](https://github.com/libcpr/cpr/blob/master/test/httpServer.hpp) in order to test behaviours. To see the various URIs that can be used to test different aspects of CPR's functionality, in may be useful to look at the implementation of [`HttpServer::OnRequest`](https://github.com/libcpr/cpr/blob/master/test/httpServer.cpp), and then at the different `HttpServer::OnRequest<URIName>` methods for a more detailed look at each URI's implementation.
