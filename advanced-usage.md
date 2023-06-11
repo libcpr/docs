@@ -812,16 +812,18 @@ int main()
 
 ## Other Request Methods
 
-C++ Requests also supports `DELETE`, `HEAD`, and `OPTIONS` methods in the expected forms:
+C++ Requests also supports `DELETE`, `PATCH`, `HEAD`, and `OPTIONS` methods in the expected forms:
 
 ```c++
 // Regular, blocking modes
 cpr::Response delete_response = cpr::Delete(cpr::Url{"http://www.httpbin.org/delete"});
+cpr::Response patch_response = cpr::Patch(cpr::Url{"http://www.httpbin.org/patch"});
 cpr::Response head_response = cpr::Head(cpr::Url{"http://www.httpbin.org/get"});
 cpr::Response options_response = cpr::OPTIONS(cpr::Url{"http://www.httpbin.org/get"});
 
 // Asynchronous, future mode
 AsyncResponse async_delete_response = cpr::DeleteAsync(cpr::Url{"http://www.httpbin.org/delete"});
+AsyncResponse async_patch_response = cpr::PatchAsync(cpr::Url{"http://www.httpbin.org/get"});
 AsyncResponse async_head_response = cpr::HeadAsync(cpr::Url{"http://www.httpbin.org/get"});
 AsyncResponse async_options_response = cpr::OptionsAsync(cpr::Url{"http://www.httpbin.org/get"});
 
@@ -829,6 +831,9 @@ AsyncResponse async_options_response = cpr::OptionsAsync(cpr::Url{"http://www.ht
 auto cb_delete_response = cpr::DeleteCallback([](cpr::Response r) {
         return r.text;
     }, cpr::Url{"http://www.httpbin.org/delete"});
+auto cb_patch_response = cpr::PatchCallback([](cpr::Response r) {
+        return r.text;
+    }, cpr::Url{"http://www.httpbin.org/patch"});
 auto cb_head_response = cpr::HeadCallback([](cpr::Response r) {
         return r.status_code;
     }, cpr::Url{"http://www.httpbin.org/get"});
@@ -836,8 +841,6 @@ auto cb_options_response = cpr::OptionsCallback([](cpr::Response r) {
         return r.status_code;
     }, cpr::Url{"http://www.httpbin.org/get"});
 ```
-
-Currently, `"PATCH"` is not an implemented HTTP method. It soon will be, and its mechanics will be identically to the example above. Stay tuned!
 
 ## HTTPS Options
 
