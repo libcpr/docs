@@ -283,6 +283,57 @@ Response response = session.Get();
 ```
 {% endraw %}
 
+### Defaults
+
+To allow `cpr` and therefore `libcurl` decide which compressions are accepted, or just to enable all supported compression methods, pass an empty list to `cpr::AcceptEncoding`.
+**This is also the default behavior if nothing else gets configured.**
+
+{% raw %}
+```c++
+// An empty list of accepted encodings in combination with a direct request without any state
+cpr::Response r = cpr::Get(cpr::Url{"http://www.httpbin.org/get"},
+                  cpr::AcceptEncoding{});
+
+// An empty list of accepted encodings in combination with a stateful cpr::Session object
+session.SetAcceptEncoding(cpr::AcceptEncoding{});
+```
+{% endraw %}
+
+### Disabling the `Accept-Encoding` Header
+
+By default `cpr` and therefore `libcurl` will always include an `Accept-Encoding` header. To disable this behavior one can simply pass the `cpr::AcceptEncodingMethods::disabled` or `"disabled"` directly as a `std::string` to `cpr::AcceptEncoding`.
+
+> ⚠️ **WARNING**<br>
+> Including `cpr::AcceptEncodingMethods::disabled` or `"disabled"` does not allow any other values/encodings to be passed to `cpr::AcceptEncoding`!<br>
+> If you ignore this a `std::invalid_argument` exception wil be thrown during session establishment.
+
+{% raw %}
+```c++
+cpr::Session session;
+session.SetUrl("https://example.com");
+session.SetAcceptEncoding({AcceptEncodingMethods::disabled}); // Disable setting the `Accept-Encoding` header
+Response response = session.Get();
+```
+{% endraw %}
+
+{% raw %}
+```c++
+cpr::Session session;
+session.SetUrl("https://example.com");
+session.SetAcceptEncoding({"disabled"}); // Disable setting the `Accept-Encoding` header
+Response response = session.Get();
+```
+{% endraw %}
+
+{% raw %}
+```c++
+cpr::Session session;
+session.SetUrl("https://example.com");
+session.SetAcceptEncoding({AcceptEncodingMethods::disabled, AcceptEncodingMethods::deflate});
+Response response = session.Get(); // An exception of type `std::invalid_argument` will be thrown here since multiple values are passed to `AcceptEncoding` where one of them is `disabled`
+```
+{% endraw %}
+
 For more information, please refer to [HTTP compression - Wikipedia](https://en.wikipedia.org/wiki/HTTP_compression) and [CURLOPT_ACCEPT_ENCODING](https://curl.se/libcurl/c/CURLOPT_ACCEPT_ENCODING.html).
 
 ## Large Responses
