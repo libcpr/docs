@@ -251,6 +251,15 @@ cpr::Response response = session.Complete(curl_result);
 ```
 {% endraw %}
 
+### Thread Safety
+
+A `cpr::Session` object by default is not thread safe, meaning you are not allowed to set multiple options (e.g. `SetBody(..)`, `SetHeader(..)`) in parallel.
+Preparing and executing a web request needs to be done sequentially, but not single threaded.
+
+To further exploit parallelism and take advantage of reusing `cpr::Session` objects take a look at the asynchronous `cpr::Session` interface (e.g. `cpr::AsyncResponse asyncResponse = session.GetAsync();`).
+Internally `cpr::ThreadPool` gets used for this, handling all requests (Ref: [Asynchronous Requests](#asynchronous-requests)).
+
+
 ## HTTP Compression
 
 HTTP compression is a capability that can improve transfer speed and bandwidth utilization between web servers and web clients.
