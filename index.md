@@ -88,6 +88,10 @@ That should do it!
 There's no need to handle `libcurl` yourself. All dependencies are taken care of for you.  
 All of this can be found in an example [**here**](https://github.com/libcpr/example-cmake-fetch-content).
 
+### Bazel
+
+Please refer to [hedronvision/bazel-make-cc-https-easy](https://github.com/hedronvision/bazel-make-cc-https-easy).
+
 ### Packages for Linux Distributions
 
 Alternatively, you may install a package specific to your Linux distribution. Since so few distributions currently have a package for cpr, most users will not be able to run your program with this approach.
