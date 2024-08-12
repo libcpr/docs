@@ -109,7 +109,7 @@ The only explicit requirements are:
 * a `C++17` compatible compiler such as Clang or GCC. The minimum required version of GCC is unknown, so if anyone has trouble building this library with a specific version of GCC, do let me know
 * If you would like to perform https requests `OpenSSL` and its development libraries are required.
 
-## Building cpr - Using vcpkg
+### Building cpr - Using vcpkg
 
 You can download and install cpr using the [vcpkg](https://github.com/Microsoft/vcpkg) dependency manager:
 ```Bash
@@ -121,12 +121,63 @@ cd vcpkg
 ```
 The `cpr` port in vcpkg is kept up to date by Microsoft team members and community contributors. If the version is out of date, please [create an issue or pull request](https://github.com/Microsoft/vcpkg) on the vcpkg repository.
 
-## Building cpr - Using Conan
+### Building cpr - Using Conan
 
 You can download and install `cpr` using the [Conan](https://conan.io/) package manager. Setup your CMakeLists.txt (see [Conan documentation](https://docs.conan.io/en/latest/integrations/build_system.html) on how to use MSBuild, Meson and others).
 An example can be found [**here**](https://github.com/libcpr/example-cmake-conan).
 
 The `cpr` package in Conan is kept up to date by Conan contributors. If the version is out of date, please [create an issue or pull request](https://github.com/conan-io/conan-center-index) on the `conan-center-index` repository.
+
+### Building cpr with Meson 
+
+Meson is available in all Linux/BSD and on Marcos in their main repository. Once installed just make a directory `cpr_test` and enter it and run:
+
+``` bash
+meson init -l cpp -n cpr-test
+```
+
+It creates a .cpp file in the directory root and a meson.build just like this.
+
+Now to make `cpr` available to the project, make a `subprojects` directory and install it with:
+
+``` bash
+meson wrap install cpr
+```
+
+It creates a meson wrap file in `subprojects/cpr.wrap`, with that we need to it as dependecy in the `meson.build` file:
+
+```conf
+project('cpr-test', 'cpp',
+  version : '0.1',
+  default_options : ['warning_level=3', 'cpp_std=c++17'])
+
+cpr_dep = dependency('cpr')
+
+exe = executable('cpr-test', 'cpr_test.cpp', dependencies: [ cpr_dep ], install: true)
+
+test('basic', exe)
+```
+
+and now just paste the example usage in the top of page in the new .cpp file, do some modification and build/compile the project:
+
+``` bash
+meson setup builddir --wipe
+meson compile -C builddir
+./builddir/cpr-test
+```
+
+That's it. For more information check out on the Meson website: https://mesonbuild.com
+
+## Testing `docs` in a container image 
+
+With your image builder ready, either [Docker](docker.com) or [Podman](podman.io), build it like:
+
+```
+podman build . --tag cpr-image
+podman run --rm -it -p 4000:4000 -v ${PWD}:/app -w /app cpr-image
+```
+
+Then go to `localhost:4000` with your web browser or [curl](curl.se). That's it!
 
 ## Contributing
 
