@@ -547,7 +547,7 @@ You could buffer data in your own way, or write every chunk immediately out to s
 The callback signature looks like this.
 
 ```c++
-  bool writeCallback(std::string_view & data, intptr_t userdata);
+  bool writeCallback(const std::string_view & data, intptr_t userdata);
 ```
 
 Provide the callback with the WriteCallback options object.  Only one write callback may be set.
