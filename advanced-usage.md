@@ -52,9 +52,9 @@ double elapsed;                 // The total time of the request in seconds
 Cookies cookies;                // A vector-like collection of cookies returned in the request
 Error error;                    // An error object containing the error code and a message
 std::string raw_header;         // The raw header string
-std::string status_line;        // The status line of the respone
+std::string status_line;        // The status line of the response
 std::string reason;             // The reason for the status code
-cpr_off_t uploaded_bytes;       // How many bytes have been send to the server
+cpr_off_t uploaded_bytes;       // How many bytes have been sent to the server
 cpr_off_t downloaded_bytes;     // How many bytes have been received from the server
 long redirect_count;            // How many redirects occurred
 
@@ -222,9 +222,9 @@ cpr::Response r = session.Get();
 ```
 {% endraw %}
 
-This is important so it bears emphasizing: *for each configuration option (like `Url`, `Parameters`), there's a corresponding method `Set<ObjectName>` and a `SetOption(<Object>)`*. The second interface is to facilitate the template metaprogramming magic that lets the API expose order-less methods.
+This is important, so it bears emphasizing: *for each configuration option (like `Url`, `Parameters`), there's a corresponding method `Set<ObjectName>` and a `SetOption(<Object>)`*. The second interface is to facilitate the template metaprogramming magic that lets the API expose order-less methods.
 
-The key to all of this is actually the way [libcurl](http://curl.haxx.se/libcurl/) is designed. It uses a somewhat [policy-based design](https://en.wikipedia.org/wiki/Policy-based_design) that relies configuring a single library object (the `curl` handle). Each option configured into that object changes its behavior in mostly orthogonal ways.
+The key to all of this is actually the way [libcurl](http://curl.haxx.se/libcurl/) is designed. It uses a somewhat [policy-based design](https://en.wikipedia.org/wiki/Policy-based_design) that relies on configuring a single library object (the `curl` handle). Each option configured into that object changes its behavior in mostly orthogonal ways.
 
 `Session` leverages that and exposes a more modern interface that's free of the macro-heavy hulkiness of libcurl. Understanding the policy-based design of libcurl is important for understanding the way the `Session` object behaves.
 
@@ -423,7 +423,7 @@ if(responses.at(0).wait_for(std::chrono::milliseconds(10)) == std::future_status
 
 
 Asynchronous requests can also be performed using a `cpr::Session` object. It is important to note that the asynchronous request is performed directly on the session object, modifying it in the process.
-To ensure that the lifetime of the session is properly extended, the session object used **must be** managed by a `std::shared_ptr`. This restriction is necessary because the implementation uses `std::shared_from_this` to pass a pointer to the ansynchronous lambda function which would otherwise throw a `std::bad_weak_ptr` exception.
+To ensure that the lifetime of the session is properly extended, the session object used **must be** managed by a `std::shared_ptr`. This restriction is necessary because the implementation uses `std::shared_from_this` to pass a pointer to the asynchronous lambda function which would otherwise throw a `std::bad_weak_ptr` exception.
 Here is an example for an asynchronous get request which uses a session object:
 
 {% raw %}
@@ -437,7 +437,7 @@ std::cout << r.text << std::endl;
 ```
 {% endraw %}
 
-An important note to make here is that arguments passed to an asynchronous call are copied. Under the hood, an asychronous call through the library's API is done with `std::async`. By default, for memory safety, all arguments are copied (or moved if temporary) because there's no syntax level guarantee that the arguments will live beyond the scope of the request.
+An important note to make here is that arguments passed to an asynchronous call are copied. Under the hood, an asynchronous call through the library's API is done with `std::async`. By default, for memory safety, all arguments are copied (or moved if temporary) because there's no syntax level guarantee that the arguments will live beyond the scope of the request.
 
 It's possible to force `std::async` out of this default so that the arguments are passed by reference as opposed to value. Currently, however, `cpr::<method>Async` has no support for forced pass by reference, though this is planned for a future release.
 
@@ -508,7 +508,7 @@ Setting the `Timeout` option sets the maximum allowed time the transfer operatio
 
 ## Setting Callbacks
 
-You can optionally set callbacks for a request. Currently there is support for read, header, write, progress, and debug callbacks.
+You can optionally set callbacks for a request. Currently, there is support for read, header, write, progress, and debug callbacks.
 
 ### ReadCallback
 
@@ -693,7 +693,7 @@ std::cout << another_r.text << std::endl;
  */
 ```
 
- This is especially useful because `Cookies` often go from server to client and back to the server. Setting new `Cookies` should not look surprising at all:
+This is especially useful because `Cookies` often go from server to client and back to the server. Setting new `Cookies` should not look surprising at all:
 
 {% raw %}
 ```c++
@@ -712,7 +712,7 @@ std::cout << r.text << std::endl;
 {% endraw %}
 
 By default `Cookies` and their values will be URL-encoded.
-Although this is recommend, it is not mandatory for `Cookies` to be URL-encoded.
+Although this is recommended, it is not mandatory for `Cookies` to be URL-encoded.
 {% raw %}
 ```
 [...]
@@ -841,7 +841,7 @@ When downloading a small file, you might want to allocate enough memory to hold 
 ```c++
 struct File
 {
-    void*  file_buf;   // file data will be save to
+    void*  file_buf;   // file data will be saved to
     int64_t read_len;  // file bytes
 };
 bool write_data(std::string data, intptr_t userdata)
@@ -1075,7 +1075,7 @@ X509v3 Authority Key Identifier:keyid:0A:BC:08:29:17:8C:A5:39:6D:7A:0E:CE:33:C7:
 ## Interface
 
 It is also possible to specify the outgoing interface used by [libcurl](http://curl.haxx.se/libcurl/).
-By default the TCP stack decides which interface to use for this request.
+By default, the TCP stack decides which interface to use for this request.
 You can change this behavior by passing the `cpr::Interface` option to your request.
 Passing an empty string corresponds to passing a `nullptr` to `CURLOPT_INTERFACE`.
 Further details: https://curl.se/libcurl/c/CURLOPT_INTERFACE.html
@@ -1099,7 +1099,7 @@ A `cpr::Interface` object can also be created via `std::string_view` instead of 
 ## Local Port and Range
 
 Sometimes it is necessary to specify the local port number for the socket used by [libcurl](http://curl.haxx.se/libcurl/).
-By default the TCP stack decides which local port to use.
+By default, the TCP stack decides which local port to use.
 You can change this behaviour by passing the `cpr::LocalPort` option to your request or by calling `Session::SetLocalPort`.
 When specifying a local port it is also recommended to specify a range if possible as the configured port might already be used.
 This can be achieved by passing the `cpr::LocalPortRange` option to the request or by calling `Session::SetLocalPortRange`
@@ -1289,7 +1289,7 @@ Response response = session.Get();
 
 It should be noted that interceptors can make changes to the session object that is later passed to the proceed function and can thus fundamentally change the request. Of course, the returned response object can also be modified.
 
-In addition, interceptors can even change the http method of the request by passing the proceed method another parameter of the enum type `cpr::Interceptor::ProceedHttpMethod`. The parameter required for download requests is also simply passed to the proceed method. For example we can implement an interceptor which changes the request method to `HEAD`:
+In addition, interceptors can even change the http method of the request by passing the proceed method another parameter of the enum type `cpr::Interceptor::ProceedHttpMethod`. The parameter required for download requests is also simply passed to the proceed method. For example, we can implement an interceptor which changes the request method to `HEAD`:
 
 {% raw %}
 ```c++
