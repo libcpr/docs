@@ -204,7 +204,7 @@ std::cout << r.text << std::endl;
 
 Notice how the `"Content-Type"` in the return header is different now; it's `"multipart/form-data"` as opposed to `"x-www-form-urlencoded"`. This facilitates larger and more generic data uploads with POST.
 
-Uploading a file or files using `Muitipart` sets the uploaded `"filename"` to it's path name by default. 
+Uploading a file or files using `Multipart` sets the uploaded `"filename"` to its path name by default. 
 To change this, you can override the `"filename"` for the uploaded file:
 
 {% raw %}
