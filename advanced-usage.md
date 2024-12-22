@@ -658,6 +658,9 @@ std::cout << r.text << std::endl;
 ```
 {% endraw %}
 
+Use `Proxies{{"no_proxy": "myhost.com"}}` or `Proxies{{"no_proxy": ""}}` to override corresponding NO_PROXY environment variable settings.
+
+
 ## Sending Cookies
 
 Earlier you saw how to grab a cookie from the request:
