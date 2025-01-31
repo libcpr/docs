@@ -182,7 +182,7 @@ The `cpr` package in Conan is kept up to date by Conan contributors. If the vers
 
 ### Building cpr with Meson 
 
-Meson is available in all Linux/BSD and on Marcos in their main repository. Once installed just make a directory `cpr_test` and enter it and run:
+Meson is available in all Linux/BSD distros and on MacOS in their main repository. Once installed just make a directory `cpr_test` and enter it and run:
 
 ``` bash
 meson init -l cpp -n cpr-test
