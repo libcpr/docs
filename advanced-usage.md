@@ -213,7 +213,7 @@ session.RemoveContent();                    // don't send a body in next request
 auto& headers = session.GetHeader();        // also don't send unnecessary headers
 headers.erase("content-type");              // headers interface is case-insensitive
 session.SetUrl(getUrl);
-cpr::Response getResponse = session.Get();  // Equivalent to cpr::Get(getUrl);
+cpr::Response getResponse = session.Get();  // equivalent to cpr::Get(getUrl);
 std::cout << getResponse.text << std::endl;
 // [...] "headers": " My-Custom-Header": " hello", [...] /* no data */
 ```
