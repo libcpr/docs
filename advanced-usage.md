@@ -194,7 +194,7 @@ std::cout << new_r.url << std::endl;    // Prints http://www.httpbin.org/get?key
 ```
 {% endraw %}
 
-`Session`'s state also includes any custom headers and content being sent. Once you performed a request both will be re-attached to any subsequent request. Resending the body can be prevented by a call to RemoveContent(), while headers can also be deleted manually:
+`Session`'s state also includes any custom headers and content being sent. Once you performed a request both will be re-attached to any subsequent request. Resending the body can be prevented by a call to `RemoveContent()`, while headers can also be deleted manually:
 
 {% raw %}
 ```c++
