@@ -194,6 +194,31 @@ std::cout << new_r.url << std::endl;    // Prints http://www.httpbin.org/get?key
 ```
 {% endraw %}
 
+`Session`'s state also includes any custom headers and content being sent. Once you performed a request both will be re-attached to any subsequent request. Resending the body can be prevented by a call to `RemoveContent()`, while headers can also be deleted manually:
+
+{% raw %}
+```c++
+cpr::Url getUrl = cpr::Url{"http://www.httpbin.org/get"};
+cpr::Url postUrl = cpr::Url{"http://www.httpbin.org/post"};
+cpr::Session session;
+session.SetUrl(postUrl);
+session.SetHeader(Header{{"My-Custom-Header", "hello"}, {"Content-Type", "application/json"}});
+session.SetBody(Body{"x=5"});
+
+cpr::Response postResponse = session.Post();
+std::cout << postResponse.text << std::endl;
+// [...] "headers": " My-Custom-Header": " hello", "Content-Type": "application/json" [...] "data": "x=5"
+
+session.RemoveContent();                    // don't send a body in next request
+auto& headers = session.GetHeader();        // also don't send unnecessary headers
+headers.erase("content-type");              // headers interface is case-insensitive
+session.SetUrl(getUrl);
+cpr::Response getResponse = session.Get();  // equivalent to cpr::Get(getUrl);
+std::cout << getResponse.text << std::endl;
+// [...] "headers": " My-Custom-Header": " hello", [...] /* no data */
+```
+{% endraw %}
+
 `Session` also allows you to get the full request URL before a request is actually made:
 
 {% raw %}
