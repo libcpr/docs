@@ -370,6 +370,24 @@ Response response = session.Get(); // An exception of type `std::invalid_argumen
 
 For more information, please refer to [HTTP compression - Wikipedia](https://en.wikipedia.org/wiki/HTTP_compression) and [CURLOPT_ACCEPT_ENCODING](https://curl.se/libcurl/c/CURLOPT_ACCEPT_ENCODING.html).
 
+## Large Requests
+
+In case you need to send a large body request or send it multiple times even to different destinations, you may instruct underlying
+CURL not to copy bodies internally for requests. To achieve that you may use `cpr::BodyView` - non-owning analogue of `cpr::Body`.
+Also, you must guarantee that body content wrapped by `cpr::BodyView` will exist until end of request.
+
+{% raw %}
+```c++
+std::vector<char> body = ...;
+cpr::Response r1 = cpr::Post(cpr::Url{"https://xxx/postSomethingUseful"},
+                   cpr::BodyView{{body.data(), body.size()}});   // Send external body content to first destination without copying it internally.
+                   
+cpr::Response r2 = cpr::Post(cpr::Url{"https://yyy/postSomethingMoreUseful"},
+                   cpr::BodyView{{body.data(), body.size()}});   // Send exactly same body content to another destination, still no copyting.
+// You are responsible to keep "body" content valid until both requests are done. Same goes to async requests.
+```
+{% endraw %}
+
 ## Large Responses
 
 In case you expect a large string as a response, you should reserve space for it beforehand to prevent it from being moved and resized too often.
