@@ -284,6 +284,42 @@ Preparing and executing a web request needs to be done sequentially, but not sin
 To further exploit parallelism and take advantage of reusing `cpr::Session` objects take a look at the asynchronous `cpr::Session` interface (e.g. `cpr::AsyncResponse asyncResponse = session.GetAsync();`).
 Internally `cpr::ThreadPool` gets used for this, handling all requests (Ref: [Asynchronous Requests](#asynchronous-requests)).
 
+## Connection Pool
+
+Connection pooling allows multiple HTTP requests to reuse the same underlying TCP connections, improving performance by avoiding connection establishment overhead. This is especially beneficial when making multiple requests to the same host.
+
+{% raw %}
+```c++
+cpr::ConnectionPool pool;
+
+// Multiple requests can reuse the same connection
+cpr::Response r1 = cpr::Get(cpr::Url{"http://httpbin.org/get"}, pool);
+cpr::Response r2 = cpr::Get(cpr::Url{"http://httpbin.org/headers"}, pool);
+cpr::Response r3 = cpr::Get(cpr::Url{"http://httpbin.org/user-agent"}, pool);
+```
+{% endraw %}
+
+Connection pools work with asynchronous requests and `Session` objects:
+
+{% raw %}
+```c++
+cpr::ConnectionPool pool;
+std::vector<cpr::AsyncResponse> responses;
+
+for (int i = 0; i < 10; ++i) {
+    responses.emplace_back(cpr::GetAsync(cpr::Url{"http://httpbin.org/get"}, pool));
+}
+
+// Session usage
+cpr::Session session;
+session.SetUrl(cpr::Url{"http://httpbin.org/post"});
+session.SetConnectionPool(pool);
+cpr::Response r = session.Post();
+```
+{% endraw %}
+
+Connection pools are thread-safe and can be shared across your application. They're most effective when reused for multiple requests to the same host.
+
 
 ## HTTP Compression
 
