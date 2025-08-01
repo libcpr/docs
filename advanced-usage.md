@@ -996,6 +996,57 @@ The underlying implementation automatically switches to SSL/TLS if `libcurl` pro
 
 You can also further customize the behavior of the SSL/TLS protocol by passing more configuration items to the request.
 
+### SSL Context Callback
+
+Available only in combination with the `OpenSSL`, `wolfSSL`, `mbedTLS` or `BearSSL` backends. Not all of those are actually available out of the box inside cpr.
+
+This option allows to register a callback function that gets invoked shortly before the creation of the SSL context inside libcurl after having processed all other SSL options.
+
+```c++
+CURLcode myCallback(const std::shared_ptr<CurlHolder>& curl_holder, void* ssl_ctx, intptr_t userdata);
+```
+
+* `curl_holder` - The current curl object performing the request.
+* `ssl_ctx` - The internal SSL context e.g. from OpenSLL.
+* `userdata` - A pointer to the optional data given to the `SslCtxCallback` during construction. 
+
+The return value has to be `CURLE_OK` on success. Every other return value will lead to cpr (and therefor curl) to cancel the request and return the provided return code to the user (`cpr::Response.error.code`). 
+
+For more information take a look at curls [`CURLOPT_SSL_CTX_FUNCTION`](https://curl.se/libcurl/c/CURLOPT_SSL_CTX_FUNCTION.html) option.
+
+Example:
+```c++
+/**
+ * Register a new SSL context callback that increments the `count` variable during invocation.
+ * The `count` then gets incremented for every call.
+ **/
+#include <cstdint>
+#include <iostream>
+#include <cassert>
+#include <cpr/cpr.h>
+#include <curl/curl.h>  // For CURLE_OK
+
+int main() {
+    size_t count{0};
+    cpr::ssl::SslCtxCallback sslCtxCb{[](const std::shared_ptr<cpr::CurlHolder>& /*curl_holder*/, void* /*ssl_ctx*/, intptr_t userdata) {
+                                          // NOLINTNEXTLINE (cppcoreguidelines-pro-type-reinterpret-cast)
+                                          size_t* count = reinterpret_cast<size_t*>(userdata);
+                                          (*count)++;
+                                          return CURLE_OK;
+                                      },
+                                      // NOLINTNEXTLINE (cppcoreguidelines-pro-type-reinterpret-cast)
+                                      reinterpret_cast<intptr_t>(&count)};
+
+    cpr::SslOptions sslOpts = cpr::Ssl(sslCtxCb);
+
+    cpr::Get(cpr::Url{"https://example.com"}, sslOpts);  // We do not care about the return value here. In a real example you would check for errors here.
+    
+    assert(count == 1);
+    std::cout << "Count: " << count << "\n";  // Prints "Count: 1\n"
+    return 0;
+}
+```
+
 ### SSL/TLS Version
 
 The SSL/TLS protocol has evolved in many different versions for security and performance reasons.
