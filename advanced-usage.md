@@ -282,7 +282,7 @@ A `cpr::Session` object by default is not thread safe, meaning you are not allow
 Preparing and executing a web request needs to be done sequentially, but not single threaded.
 
 To further exploit parallelism and take advantage of reusing `cpr::Session` objects take a look at the asynchronous `cpr::Session` interface (e.g. `cpr::AsyncResponse asyncResponse = session.GetAsync();`).
-Internally `cpr::ThreadPool` gets used for this, handling all requests (Ref: [Asynchronous Requests](#asynchronous-requests)).
+Internally [`cpr::ThreadPool`](#thread-pool) gets used for this, handling all requests (Ref: [Asynchronous Requests](#asynchronous-requests)).
 
 ## Connection Pool
 
@@ -558,6 +558,71 @@ if (future_text.wait_for(std::chrono::seconds(0)) == std::future_status::ready) 
 }
 ```
 {% endraw %}
+
+## Thread Pool
+
+Behind the scenes [Asynchronous Requests](#asynchronous-requests) are handled by `cpr::ThreadPool`.
+This thread pool takes care of performing `n` requests with `m` threads in parallel.
+
+### Configuring
+
+The number of thread pool workers can be configured.
+
+```c++
+#include <cpr/async.h>
+#include <cpr/threadpool.h>
+
+// Get access to the cpr global singleton thread pool object.
+cpr::ThreadPool* tp = GlobalThreadPool::GetInstance();
+
+// Sets the number of threads that should always be in standby or working.
+tp->SetMinThreadCount(1);
+
+//Sets the current number of threads available to the thread pool (working or idle).
+tp->SetMaxThreadCount(8);
+```
+
+To print debug information about the current thread pool state take a look at the following example.
+
+```c++
+#include <cpr/async.h>
+#include <cpr/threadpool.h>
+#include <iostream>
+
+// Get access to the cpr global singleton thread pool object.
+cpr::ThreadPool* tp = GlobalThreadPool::GetInstance();
+
+std::cout << "Current thread count: " << tp->GetCurThreadCount() << '\n';
+std::cout << "Min thread count: " << tp->GetMinThreadCount() << '\n';
+std::cout << "Max thread count: " << tp->GetMaxThreadCount() << '\n';
+std::cout << "Idle thread count: " << tp->GetIdleThreadCount() << '\n';
+```
+
+### Lifecycle
+
+The thread pool lifecycle can be controlled e.g. pausing task execution and resuming it later.
+
+```c++
+#include <cpr/async.h>
+#include <cpr/threadpool.h>
+#include <iostream>
+#include <future>
+#include <cassert>
+
+// Get access to the cpr global singleton thread pool object.
+cpr::ThreadPool* tp = GlobalThreadPool::GetInstance();
+
+// Clear the task queue and stop/join all threads.
+tp->Stop();
+
+// Start the thread pool again and spawn tp->GetMinThreadCount() workers.
+tp->Start();
+
+// Add an new not directly cpr related task to the thread pool
+auto future = tp->Submit([](){std::cout << "Hello from within the thread pool!\n"; })
+const std::future_status status = future.wait_for(zero); // Wait for the task to finish
+assert(status == std::future_status::ready);
+```
 
 ## Setting a Timeout
 
