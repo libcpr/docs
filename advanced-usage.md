@@ -424,6 +424,76 @@ cpr::Response r2 = cpr::Post(cpr::Url{"https://yyy/postSomethingMoreUseful"},
 ```
 {% endraw %}
 
+## Streaming Multipart Uploads
+
+Use `cpr::MultipartStream` to supply an individual multipart part through a read callback. This lets you upload large files or generated data incrementally without loading the entire body into memory. Streamed parts can be mixed with ordinary fields, `cpr::File` parts, and `cpr::Buffer` parts in the same `cpr::Multipart`.
+
+CPR generates the multipart boundaries and the request's `Content-Type` header. You can supply a filename and a content type for each streamed part. Omit the filename to send a streamed form field.
+
+### Streaming a File
+
+The following example opens a file with its native filesystem path and captures the stream by owning value. With the default `std::filesystem` backend, this also allows Unicode filenames on Windows without asking libcurl to open the path.
+
+{% raw %}
+```c++
+#include <cpr/cpr.h>
+#include <cstdio>
+#include <fstream>
+#include <memory>
+#include <stdexcept>
+
+cpr::Response Upload(const cpr::Url& url, const cpr::fs::path& path) {
+    // The native filesystem path lets the C++ library open Unicode Windows paths.
+    std::shared_ptr<std::ifstream> file = std::make_shared<std::ifstream>(path, std::ios::binary);
+    if (!file->is_open()) {
+        throw std::runtime_error("Cannot open upload file");
+    }
+
+    cpr::MultipartStream stream{
+        cpr::ReadCallback{
+            static_cast<cpr::cpr_off_t>(cpr::fs::file_size(path)),
+            [file](char* buffer, size_t& size, intptr_t) {
+                file->read(buffer, static_cast<std::streamsize>(size));
+                size = static_cast<size_t>(file->gcount());
+                return !file->bad() && (!file->fail() || file->eof());
+            }},
+        path.filename().u8string(),
+        [file](cpr::cpr_off_t offset, int origin) {
+            if (origin != SEEK_SET || offset < 0) {
+                return false;
+            }
+            file->clear(); // Clear EOF before rewinding.
+            file->seekg(static_cast<std::streamoff>(offset), std::ios::beg);
+            return !file->fail();
+        }};
+
+    return cpr::Post(url, cpr::Multipart{
+        {cpr::Part{"description", "An uploaded file"},
+         cpr::Part{"file", std::move(stream), "application/octet-stream"}}});
+}
+```
+{% endraw %}
+
+### Read Callback
+
+The `cpr::ReadCallback` supplied to `cpr::MultipartStream` provides data for that part only. Unlike a request-level read callback, each streamed part can have its own reader.
+
+The callback receives the available buffer capacity in `size`. Fill the buffer and replace `size` with the number of bytes written. Set `size` to zero at end-of-file. Returning `false`, throwing an exception, or reporting more bytes than the buffer capacity aborts the request with `cpr::ErrorCode::ABORTED_BY_CALLBACK`.
+
+Supply the exact byte count to `cpr::ReadCallback` when it is known. If you omit the count, the size is `-1`, indicating an unknown-length stream. HTTP/1.1 multipart requests with unknown-length parts use chunked transfer encoding, which some servers do not accept.
+
+### Rewinding a Stream
+
+The optional seek callback receives a byte offset and a `SEEK_*` origin and returns `true` on success. Redirects and authentication challenges may require libcurl to rewind and resend a part. Without a seek callback, resending may fail with `cpr::ErrorCode::SEND_FAIL_REWIND`. A failed or throwing seek callback also causes rewind failure.
+
+When making another request with the same source, rewind it yourself or supply a fresh source.
+
+### Callback Lifetime
+
+CPR copies the callback objects into each MIME part and releases those copies when the MIME structure is replaced, removed, or destroyed. Capture resources such as the file by owning value, for example with `std::shared_ptr`, when using `cpr::PostAsync`. Capturing references or using `cpr::ReadCallback::userdata` does not extend the referenced resource's lifetime.
+
+Copies of callbacks may share captured state, so use separate sources for concurrent uploads. Streaming an already-open file also works with Windows libcurl builds that lack Unicode path support. Path-based `cpr::File` uploads still depend on that support.
+
 ## Large Responses
 
 In case you expect a large string as a response, you should reserve space for it beforehand to prevent it from being moved and resized too often.
@@ -602,6 +672,8 @@ The callback signature looks like this.
 Provide the callback with the ReadCallback options object.  Only one read callback may be set.
 When called, `length` is the length of `buffer`.  `buffer` should be filled with data, and `length` updated to how much was filled.
 Return `true` on success, or `false` to **cancel** the transfer.
+
+For callbacks that supply individual parts of a multipart upload, see [Streaming Multipart Uploads](#streaming-multipart-uploads).
 
 ### HeaderCallback
 
