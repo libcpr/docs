@@ -249,6 +249,8 @@ cpr::Response r = cpr::Post(cpr::Url{"http://www.httpbin.org/post"},
 ```
 {% endraw %}
 
+To upload a file or generated data incrementally through a callback, use `cpr::MultipartStream`. See [Streaming Multipart Uploads](/advanced-usage.html#streaming-multipart-uploads) for an example and callback lifetime requirements.
+
 ## Authentication
 
 Any self-respecting networking library should have support for authentication. It's rare for a web API to allow unfettered access to the datasets they guard. Most often they require a username/password pair:
