@@ -437,9 +437,7 @@ std::cout << r.text << std::endl;
 ```
 {% endraw %}
 
-An important note to make here is that arguments passed to an asynchronous call are copied. Under the hood, an asynchronous call through the library's API is done with `std::async`. By default, for memory safety, all arguments are copied (or moved if temporary) because there's no syntax level guarantee that the arguments will live beyond the scope of the request.
-
-It's possible to force `std::async` out of this default so that the arguments are passed by reference as opposed to value. Currently, however, `cpr::<method>Async` has no support for forced pass by reference, though this is planned for a future release.
+Asynchronous requests run on the shared [thread pool](#thread-pool). Request options are copied or moved into the queued task so they remain alive until execution finishes. Keep objects referenced by callbacks or lambda captures alive until the task completes. The generic `cpr::async()` and `cpr::ThreadPool::Submit()` interfaces also support `std::ref()` for explicitly borrowed arguments.
 
 ## Asynchronous Callbacks
 
@@ -482,68 +480,137 @@ if (future_text.wait_for(std::chrono::seconds(0)) == std::future_status::ready) 
 
 ## Thread Pool
 
-Behind the scenes [Asynchronous Requests](#asynchronous-requests) are handled by `cpr::ThreadPool`.
-This thread pool takes care of performing `n` requests with `m` threads in parallel.
+[Asynchronous Requests](#asynchronous-requests), [Asynchronous Callbacks](#asynchronous-callbacks), and `cpr::async()` use the process-wide `cpr::GlobalThreadPool`. Local `cpr::ThreadPool` instances can also execute your own tasks; they start when constructed and stop when destroyed.
 
-### Configuring
+### Selecting a Backend
 
-The number of thread pool workers can be configured.
+Select the backend when configuring cpr. The builtin backend is the default and adds no dependencies:
 
-```c++
-#include <cpr/async.h>
-#include <cpr/threadpool.h>
-
-// Get access to the cpr global singleton thread pool object.
-cpr::ThreadPool* tp = GlobalThreadPool::GetInstance();
-
-// Sets the number of threads that should always be in standby or working.
-tp->SetMinThreadCount(1);
-
-//Sets the current number of threads available to the thread pool (working or idle).
-tp->SetMaxThreadCount(8);
+```sh
+cmake -S . -B build -DCPR_THREAD_POOL=BUILTIN
+# Use an existing Boost installation (1.70 or newer):
+cmake -S . -B build -DCPR_THREAD_POOL=BOOST_ASIO
 ```
 
-To print debug information about the current thread pool state take a look at the following example.
+With CMake FetchContent, set `CPR_THREAD_POOL` before `FetchContent_MakeAvailable(cpr)`. Other values are rejected at configuration time. cpr does not download Boost; its public headers forward-declare the optional Asio context type. Installed cpr packages built with `BOOST_ASIO` discover the exact Boost version used to build cpr through their CMake package configuration, for both shared and static libraries.
+
+| Backend | Workers | Changing the maximum while running |
+|---------|---------|------------------------------------|
+| `BUILTIN` | Grows on demand up to the maximum; excess idle workers retire after an idle timeout, retaining the minimum. | Excess workers retire as their active tasks finish; queued tasks are preserved. |
+| `BOOST_ASIO` | Owns a `boost::asio::thread_pool` with a fixed worker count equal to the maximum. The minimum is retained as configuration. | Waits for active tasks and replaces the executor, preserving queued tasks. |
+| `BOOST_ASIO` with a caller-owned context | Creates no workers. The maximum limits simultaneous cpr tasks; the minimum is retained as configuration. | Applies the new limit to subsequent task claims; active tasks finish normally. |
+
+### Configuring Worker Limits
+
+The default minimum is zero. The default maximum is `std::thread::hardware_concurrency()`, or one if the hardware concurrency is unknown. Configure the global pool before submitting requests:
 
 ```c++
 #include <cpr/async.h>
-#include <cpr/threadpool.h>
+
+cpr::async::startup(1, 8);
+auto* pool = cpr::GlobalThreadPool::GetInstance();
+
+// Update both limits together, avoiding invalid intermediate values.
+pool->SetThreadCounts(2, 4);
+
+// Individual setters are also available.
+pool->SetMinThreadCount(1);
+pool->SetMaxThreadCount(8);
+```
+
+The maximum must be nonzero and the minimum must not exceed it. Invalid limits throw `std::invalid_argument` and leave the existing configuration unchanged. `cpr::async::startup(minimum, maximum)` lazily creates the global pool and sets both limits together; it does not restart a pool stopped with `Stop()`. Call `Start()` to resume it.
+
+The count getters return synchronized snapshots:
+
+```c++
+#include <cpr/async.h>
 #include <iostream>
 
-// Get access to the cpr global singleton thread pool object.
-cpr::ThreadPool* tp = GlobalThreadPool::GetInstance();
-
-std::cout << "Current thread count: " << tp->GetCurThreadCount() << '\n';
-std::cout << "Min thread count: " << tp->GetMinThreadCount() << '\n';
-std::cout << "Max thread count: " << tp->GetMaxThreadCount() << '\n';
-std::cout << "Idle thread count: " << tp->GetIdleThreadCount() << '\n';
+cpr::ThreadPool* pool = cpr::GlobalThreadPool::GetInstance();
+std::cout << "Current thread count: " << pool->GetCurThreadCount() << '\n';
+std::cout << "Min thread count: " << pool->GetMinThreadCount() << '\n';
+std::cout << "Max thread count: " << pool->GetMaxThreadCount() << '\n';
+std::cout << "Idle thread count: " << pool->GetIdleThreadCount() << '\n';
 ```
+
+For owned workers, the current count includes active and idle workers and can temporarily exceed a reduced maximum. With a caller-owned context it reports active cpr tasks, and the idle count is always zero because cpr does not manage the context's threads.
+
+### Submitting Tasks
+
+`Submit()` returns a `std::future` for the callable's result. The callable and its arguments are copied or moved into owned storage and moved into the invocation. Move-only values, member pointers, and `std::ref()` are supported. Callable exceptions propagate through `future.get()`. Borrowed arguments and objects returned by reference must remain alive for their use.
+
+```c++
+#include <cpr/threadpool.h>
+
+cpr::ThreadPool pool(0, 4);
+auto result = pool.Submit([](int value) { return value * 2; }, 21);
+int value = result.get(); // 42
+pool.Wait();
+```
+
+Use `cpr::async(fn, args...)` to submit a generic task to the global pool and receive a `cpr::AsyncWrapper` instead.
 
 ### Lifecycle
 
-The thread pool lifecycle can be controlled e.g. pausing task execution and resuming it later.
+`Wait()` blocks until a running pool has no queued or active tasks, without stopping it. On a stopped pool, it waits for shutdown or executor replacement to finish; work queued for a later `Start()` does not prevent return. Concurrent submissions can add more work after `Wait()` returns.
+
+`Stop()` disables dispatch, cancels tasks queued at that moment, and waits for active tasks to finish. Canceled futures report `std::future_errc::broken_promise` when read. Tasks submitted after dispatch stops are retained for the next `Start()`. Calling `Stop()` again cancels those tasks too. Destroying a pool stops it and cancels remaining queued work.
 
 ```c++
-#include <cpr/async.h>
 #include <cpr/threadpool.h>
 #include <iostream>
-#include <future>
-#include <cassert>
 
-// Get access to the cpr global singleton thread pool object.
-cpr::ThreadPool* tp = GlobalThreadPool::GetInstance();
+cpr::ThreadPool pool(0, 4);
+pool.Stop();
 
-// Clear the task queue and stop/join all threads.
-tp->Stop();
-
-// Start the thread pool again and spawn tp->GetMinThreadCount() workers.
-tp->Start();
-
-// Add an new not directly cpr related task to the thread pool
-auto future = tp->Submit([](){std::cout << "Hello from within the thread pool!\n"; })
-const std::future_status status = future.wait_for(zero); // Wait for the task to finish
-assert(status == std::future_status::ready);
+// This task stays queued until Start().
+auto result = pool.Submit([] { return 42; });
+pool.Start();
+std::cout << result.get() << '\n';
+pool.Wait();
+pool.Stop();
 ```
+
+Repeated `Start()` and `Stop()` calls are supported. `Start()` on a running pool does nothing. `GetState()` reports whether dispatch is enabled; `STOP` alone does not mean active tasks have finished. Use `Stop()` or `Wait()` to wait for shutdown.
+
+Call lifecycle methods (`Start()`, `Stop()`, `Wait()`) and limit setters from outside the pool's workers; otherwise they throw `std::logic_error`. Destroy the pool outside its workers, with no concurrent calls accessing it. Tasks must not block on other tasks submitted to the same saturated pool, since every worker may be occupied by waiting tasks.
+
+`cpr::async::cleanup()` permanently destroys the global pool, canceling queued work and waiting for active tasks. Call it only after the pool has been created, outside its workers, and with no concurrent operations accessing it. Do not submit requests afterward: the global singleton cannot be recreated after cleanup. To temporarily stop and restart the global pool, use its `Stop()` and `Start()` methods instead.
+
+### Caller-Owned Boost.Asio Context
+
+With `CPR_THREAD_POOL=BOOST_ASIO`, you can select a caller-owned `boost::asio::io_context` before any API initializes the global pool:
+
+```c++
+#include <boost/asio/io_context.hpp>
+#include <cpr/cpr.h>
+
+int main() {
+    boost::asio::io_context context;
+    cpr::async::startup(context, 0, 4);
+    // Alternatively: cpr::GlobalThreadPool::GetInstance(context);
+    auto result = cpr::async([] { return 42; });
+    context.run();
+    int value = result.get();
+    cpr::async::cleanup(); // Destroy the global pool before context.
+    return value == 42 ? 0 : 1;
+}
+```
+
+Use the same Boost version and compatible Asio configuration when building cpr and the application. Include Boost headers explicitly and link the application with `Boost::headers` as well as `cpr::cpr`:
+
+```cmake
+find_package(cpr REQUIRED)
+# Match the Boost version used to build cpr.
+find_package(Boost 1.70 REQUIRED)
+target_link_libraries(your_target_name PRIVATE cpr::cpr Boost::headers)
+```
+
+The context must outlive the pool. cpr posts tasks but never runs, restarts, stops, or destroys your context. Drive its event loop yourself, and use an Asio work guard if background event-loop threads need to remain available between submissions. If the context has stopped, call `context.restart()` before running it again. cpr tasks, including HTTP requests, execute synchronously on the threads driving the context and occupy those threads until they finish. Actual parallelism depends on both the configured maximum and how many threads run the context.
+
+`Wait()` requires another thread to drive the context while it blocks. Waiting on a future from the only event-loop thread also prevents queued tasks from running. `Stop()` and cleanup cancel pending cpr tasks and wait for active ones, leaving unrelated handlers alone. Canceled posted handlers remain safe if the context runs after the cpr pool has been destroyed.
+
+The context choice is fixed on first initialization. Reusing the same context returns the existing global pool; using a different context or supplying one after the default global pool exists throws `std::logic_error`. Local pools also support `cpr::ThreadPool pool(context, 0, 4)` without changing the global pool. The builtin backend rejects context injection with `std::logic_error`.
 
 ## Setting a Timeout
 
