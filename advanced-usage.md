@@ -299,16 +299,11 @@ cpr::Response r3 = cpr::Get(cpr::Url{"http://httpbin.org/user-agent"}, pool);
 ```
 {% endraw %}
 
-Connection pools work with asynchronous requests and `Session` objects:
+Connection pools also work with sequential requests from `Session` objects:
 
 {% raw %}
 ```c++
 cpr::ConnectionPool pool;
-std::vector<cpr::AsyncResponse> responses;
-
-for (int i = 0; i < 10; ++i) {
-    responses.emplace_back(cpr::GetAsync(cpr::Url{"http://httpbin.org/get"}, pool));
-}
 
 // Session usage
 cpr::Session session;
@@ -318,7 +313,11 @@ cpr::Response r = session.Post();
 ```
 {% endraw %}
 
-Connection pools are thread-safe and can be shared across your application. They're most effective when reused for multiple requests to the same host.
+### Thread Safety
+
+Do not use one pool, or copies of it, for concurrent requests on different threads. libcurl does not support concurrent cross-thread connection sharing through `CURL_LOCK_DATA_CONNECT`, even with share locking callbacks. See libcurl's [connection-sharing restrictions](https://curl.se/libcurl/c/CURLSHOPT_SHARE.html#CURLLOCKDATACONNECT) and [thread-safety documentation](https://curl.se/libcurl/c/threadsafe.html).
+
+Use a separately constructed pool per worker thread. Copying a `ConnectionPool` shares its underlying connection state; it does not create an independent pool. In particular, do not pass the same pool to multiple concurrent `GetAsync` calls. Reuse each pool for sequential requests to the same host.
 
 
 ## HTTP Compression
