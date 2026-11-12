@@ -1206,7 +1206,7 @@ cpr::Response AuthorizedRequest(Args&&... args) {
             cpr::Header{{"Content-Type", "application/json; charset=utf-8"}});
 }
 
-cpr::Response response = AuthorizedRequest<cpr::HTTPMethod::POST>(
+cpr::Response response = AuthorizedRequest<cpr::HTTPMethod::kPost>(
         cpr::Url{"https://httpbin.org/post"},
         cpr::Body{R"({"a": true})"});
 ```
