@@ -1187,6 +1187,33 @@ auto cb_options_response = cpr::OptionsCallback([](cpr::Response r) {
     }, cpr::Url{"http://www.httpbin.org/get"});
 ```
 
+## Generic HTTP Requests
+
+Use `cpr::Request<method>(...)` to select an HTTP method at compile time while passing the same request options used by the regular API. Supported methods are `GET`, `POST`, `PUT`, `DELETE`, `PATCH`, `HEAD`, and `OPTIONS`.
+
+This is useful for sharing common request options across methods without duplicating a wrapper for each one:
+
+{% raw %}
+```c++
+#include <utility>
+#include <cpr/cpr.h>
+
+template <cpr::HTTPMethod method, typename... Args>
+cpr::Response AuthorizedRequest(Args&&... args) {
+    return cpr::Request<method>(
+            std::forward<Args>(args)...,
+            cpr::Bearer{"ACCESS_TOKEN"},
+            cpr::Header{{"Content-Type", "application/json; charset=utf-8"}});
+}
+
+cpr::Response response = AuthorizedRequest<cpr::HTTPMethod::POST>(
+        cpr::Url{"https://httpbin.org/post"},
+        cpr::Body{R"({"a": true})"});
+```
+{% endraw %}
+
+`Request` returns a synchronous `cpr::Response`. Use the method-specific functions for asynchronous or multi-request operations.
+
 ## HTTPS Options
 
 CPR verifies SSL certificates for HTTPS requests, just like a web browser. By default, SSL verification is enabled.
