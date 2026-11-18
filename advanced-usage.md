@@ -1212,7 +1212,18 @@ cpr::Response response = AuthorizedRequest<cpr::HTTPMethod::kPost>(
 ```
 {% endraw %}
 
-`Request` returns a synchronous `cpr::Response`. Use the method-specific functions for asynchronous or multi-request operations.
+`Request` returns a synchronous `cpr::Response`. For an asynchronous request with the same compile-time method selection, use `RequestAsync`. Like the method-specific async functions, it copies or moves its options into the task and returns a `cpr::AsyncResponse`:
+
+{% raw %}
+```c++
+cpr::AsyncResponse pending = cpr::RequestAsync<cpr::HTTPMethod::kGet>(
+        cpr::Url{"https://httpbin.org/get"},
+        cpr::Header{{"Accept", "application/json"}});
+cpr::Response response = pending.get();
+```
+{% endraw %}
+
+Use the method-specific functions for multi-request operations.
 
 ## HTTPS Options
 
